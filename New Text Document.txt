@@ -1,0 +1,348 @@
+/**
+ * React Component to Standalone HTML Converter
+ * Use this script to convert React artifacts to deployable HTML files
+ */
+
+// Configuration
+const API_BASE_URL = 'https://api.umrahflex.com'; // Change to your n8n URL
+
+// HTML Template
+const createHTMLTemplate = (title, reactCode) => `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>${title}</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- React & ReactDOM -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    
+    <!-- Babel Standalone for JSX -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <!-- Recharts for graphs -->
+    <script src="https://unpkg.com/recharts@2.5.0/dist/Recharts.js"></script>
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+    
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+        const { 
+            TrendingUp, Users, DollarSign, MapPin, Building, Phone, 
+            CheckCircle, Clock, AlertCircle, Plus, Edit, Trash2, Eye, 
+            Search, Filter, Copy, Calendar, Hotel, Settings, XCircle,
+            Download, MessageCircle
+        } = lucide;
+        
+        // API Configuration
+        const API_URL = '${API_BASE_URL}';
+        
+        // Helper function to fetch data
+        const fetchAPI = async (endpoint, options = {}) => {
+            try {
+                const response = await fetch(\`\${API_URL}\${endpoint}\`, {
+                    ...options,
+                    headers: {
+                        'Content-Type': 'application/json',
+                        ...options.headers,
+                    },
+                });
+                
+                if (!response.ok) {
+                    throw new Error(\`HTTP error! status: \${response.status}\`);
+                }
+                
+                return await response.json();
+            } catch (error) {
+                console.error('API Error:', error);
+                throw error;
+            }
+        };
+        
+        // Your React Component Code Here
+        ${reactCode}
+        
+        // Render App
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+        
+        // Initialize Lucide Icons
+        lucide.createIcons();
+    </script>
+</body>
+</html>
+`;
+
+// Component Wrapper Template
+const wrapComponent = (componentCode, componentName) => `
+function App() {
+    ${componentCode}
+    
+    return <${componentName} />;
+}
+`;
+
+// Export function
+const generateHTMLFiles = () => {
+    const files = [
+        {
+            name: 'admin-panel.html',
+            title: 'Admin & Sales Team Panel',
+            component: 'AdminSalesPanel',
+            description: 'Complete admin dashboard with office, team, and lead management'
+        },
+        {
+            name: 'inbox.html',
+            title: 'Team Inbox',
+            component: 'UmrahInbox',
+            description: 'Read-only inbox with status update buttons'
+        },
+        {
+            name: 'packages.html',
+            title: 'Package Management',
+            component: 'PackageManagementPanel',
+            description: 'Complete package and passenger rules management'
+        }
+    ];
+    
+    console.log('📦 HTML File Generator');
+    console.log('='.repeat(50));
+    console.log('\\nGenerate these files:');
+    files.forEach(file => {
+        console.log(`\\n✓ ${file.name}`);
+        console.log(`  Title: ${file.title}`);
+        console.log(`  Component: ${file.component}`);
+        console.log(`  Description: ${file.description}`);
+    });
+    
+    console.log('\\n' + '='.repeat(50));
+    console.log('\\n📝 Instructions:');
+    console.log('\\n1. Copy each React component code from Claude');
+    console.log('2. Paste into createHTMLTemplate() function');
+    console.log('3. Save as .html file');
+    console.log('4. Update API_BASE_URL at the top');
+    console.log('5. Upload to your web hosting');
+    console.log('\\n✅ Done! Your UI is live!');
+};
+
+// Integration Guide
+const integrationSteps = {
+    step1: {
+        title: 'Setup API Base URL',
+        code: \`
+// In each HTML file, find and update this line:
+const API_URL = 'https://api.umrahflex.com'; // Your n8n URL
+        \`,
+        notes: 'Replace with your actual n8n webhook domain'
+    },
+    
+    step2: {
+        title: 'Enable CORS in n8n',
+        code: \`
+// Add to n8n environment variables:
+N8N_CORS_ALLOWED_ORIGINS=https://admin.umrahflex.com,https://inbox.umrahflex.com,https://packages.umrahflex.com
+        \`,
+        notes: 'This allows your UIs to call n8n APIs'
+    },
+    
+    step3: {
+        title: 'Test API Connection',
+        code: \`
+// Open browser console on your UI page and run:
+fetch('https://api.umrahflex.com/api/dashboard')
+    .then(r => r.json())
+    .then(d => console.log('API Working:', d))
+    .catch(e => console.error('API Error:', e));
+        \`,
+        notes: 'Should return dashboard data without CORS errors'
+    },
+    
+    step4: {
+        title: 'Upload to Hosting',
+        hosting: [
+            {
+                name: 'cPanel / Web Hosting',
+                steps: [
+                    'Login to cPanel',
+                    'Go to File Manager',
+                    'Navigate to public_html',
+                    'Upload .html files',
+                    'Access via: yourdomain.com/admin-panel.html'
+                ]
+            },
+            {
+                name: 'GitHub Pages',
+                steps: [
+                    'Create new repository: umrah-ui',
+                    'Upload .html files',
+                    'Go to Settings > Pages',
+                    'Enable GitHub Pages',
+                    'Access via: username.github.io/umrah-ui/admin-panel.html'
+                ]
+            },
+            {
+                name: 'Netlify (Drag & Drop)',
+                steps: [
+                    'Go to app.netlify.com',
+                    'Drag your folder with .html files',
+                    'Wait 30 seconds',
+                    'Get URL: random-name.netlify.app',
+                    'Optional: Add custom domain in settings'
+                ]
+            }
+        ]
+    }
+};
+
+// Deployment Checklist
+const deploymentChecklist = [
+    '☐ Database schema created in PostgreSQL',
+    '☐ n8n workflow imported successfully',
+    '☐ n8n webhooks activated and tested',
+    '☐ Environment variables configured in n8n',
+    '☐ CORS enabled for your UI domains',
+    '☐ WhatsApp Business API connected',
+    '☐ Admin panel HTML uploaded',
+    '☐ Inbox HTML uploaded',
+    '☐ Package management HTML uploaded',
+    '☐ API_BASE_URL configured in all files',
+    '☐ Test: Can access admin panel',
+    '☐ Test: Can view dashboard stats',
+    '☐ Test: Can add/edit packages',
+    '☐ Test: Can update lead status',
+    '☐ Test: WhatsApp bot responds correctly'
+];
+
+// Quick Start for Each Hosting Platform
+const quickStarts = {
+    cpanel: {
+        steps: [
+            'Login to cPanel',
+            'File Manager > public_html',
+            'Upload > Select Files',
+            'Choose your .html files',
+            'Access: yourdomain.com/filename.html'
+        ],
+        time: '5 minutes',
+        cost: 'Existing hosting'
+    },
+    
+    githubPages: {
+        steps: [
+            'Create repo on GitHub',
+            'Upload files via web interface',
+            'Settings > Pages > Enable',
+            'Wait 1-2 minutes',
+            'Access: username.github.io/repo-name/'
+        ],
+        time: '10 minutes',
+        cost: 'FREE'
+    },
+    
+    netlify: {
+        steps: [
+            'Go to netlify.com',
+            'Drag folder into upload area',
+            'Wait 30 seconds',
+            'Get instant URL',
+            'Optional: Add custom domain'
+        ],
+        time: '2 minutes',
+        cost: 'FREE'
+    },
+    
+    vercel: {
+        steps: [
+            'Go to vercel.com',
+            'Import from GitHub repo',
+            'Or drag & drop folder',
+            'Auto-deploy on push',
+            'Get .vercel.app URL'
+        ],
+        time: '3 minutes',
+        cost: 'FREE'
+    }
+};
+
+// Troubleshooting Guide
+const troubleshooting = {
+    'CORS Error': {
+        problem: 'Browser blocks API calls',
+        solution: 'Add UI domain to N8N_CORS_ALLOWED_ORIGINS in n8n',
+        test: 'Check browser console for "CORS" error message'
+    },
+    
+    'API Not Found': {
+        problem: 'Webhook URL incorrect',
+        solution: 'Verify API_BASE_URL in HTML matches n8n webhook URL',
+        test: 'Try accessing webhook URL directly in browser'
+    },
+    
+    'Page Not Loading': {
+        problem: 'CDN resources blocked',
+        solution: 'Check if unpkg.com and cdn.tailwindcss.com are accessible',
+        test: 'Open browser developer tools Network tab'
+    },
+    
+    'WhatsApp Not Responding': {
+        problem: 'Webhook not receiving messages',
+        solution: 'Verify webhook URL in Meta Developer Console',
+        test: 'Check n8n workflow execution history'
+    }
+};
+
+// Print all guides
+console.log('\\n🚀 DEPLOYMENT MASTER GUIDE');
+console.log('='.repeat(60));
+generateHTMLFiles();
+
+console.log('\\n📋 DEPLOYMENT CHECKLIST:');
+deploymentChecklist.forEach(item => console.log(item));
+
+console.log('\\n🎯 QUICK START OPTIONS:');
+Object.entries(quickStarts).forEach(([platform, config]) => {
+    console.log(\`\\n\${platform.toUpperCase()}:\`);
+    console.log(\`⏱️  Time: \${config.time}\`);
+    console.log(\`💰 Cost: \${config.cost}\`);
+    config.steps.forEach((step, i) => console.log(\`  \${i + 1}. \${step}\`));
+});
+
+console.log('\\n🔧 TROUBLESHOOTING:');
+Object.entries(troubleshooting).forEach(([issue, details]) => {
+    console.log(\`\\n❌ \${issue}:\`);
+    console.log(\`   Problem: \${details.problem}\`);
+    console.log(\`   Solution: \${details.solution}\`);
+    console.log(\`   Test: \${details.test}\`);
+});
+
+// Export for use
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = {
+        createHTMLTemplate,
+        wrapComponent,
+        integrationSteps,
+        quickStarts,
+        troubleshooting,
+        deploymentChecklist
+    };
+}
