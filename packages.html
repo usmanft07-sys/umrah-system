@@ -3,407 +3,568 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Package Management - Umrah System</title>
-    
-    <!-- Tailwind CSS -->
+    <title>Package Management - UmrahFlex</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    
-    <!-- React & ReactDOM -->
-    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-    
-    <!-- Babel for JSX -->
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-        }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        .modal { display: none; }
+        .modal.active { display: flex; }
     </style>
 </head>
-<body>
-    <div id="root"></div>
-    
-    <script type="text/babel">
-        const { useState, useEffect } = React;
-        
-        // ⚙️ CONFIGURATION - UPDATE THIS WITH YOUR n8n URL
-        const API_URL = 'https://api.umrahflex.com';
-        
-        // Simple Icon Components (replacing lucide-react)
-        const Icons = {
-            Plus: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>,
-            Edit: () => <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>,
-            Trash2: () => <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>,
-            Eye: () => <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>,
-            Copy: () => <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>,
-            Calendar: () => <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>,
-            MapPin: () => <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>,
-            Hotel: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>,
-            DollarSign: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>,
-            CheckCircle: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>,
-            XCircle: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>,
-        };
-
-        // Main Component - Your exact code with Icons replaced
-        function PackageManagementPanel() {
-          const [activeTab, setActiveTab] = useState('packages');
-          const [packages, setPackages] = useState([
-            {
-              id: 1,
-              name: '14 Days Ramadan Economy Package',
-              airport: 'Karachi',
-              travel_date: '2026-03-15',
-              duration: 14,
-              makkah_hotel: 'Al Shohada Hotel',
-              madina_hotel: 'Dar Al Taqwa Hotel',
-              distance_makkah: 250,
-              distance_madina: 300,
-              adult_sharing: 145000,
-              quad: 155000,
-              triple: 165000,
-              double: 185000,
-              child_with_bed: 95000,
-              child_without_bed: 75000,
-              infant: 25000,
-              sharing_allowed: true,
-              islamic_month: 'Ramadan',
-              currency: 'PKR',
-              status: 'active',
-              bookings: 12,
-              capacity: 50
-            },
-            {
-              id: 2,
-              name: '14 Days Ramadan Premium Package',
-              airport: 'Karachi',
-              travel_date: '2026-03-15',
-              duration: 14,
-              makkah_hotel: 'Hilton Suites',
-              madina_hotel: 'Millennium Hotel',
-              distance_makkah: 100,
-              distance_madina: 150,
-              adult_sharing: 225000,
-              quad: 245000,
-              triple: 265000,
-              double: 295000,
-              child_with_bed: 145000,
-              child_without_bed: 125000,
-              infant: 35000,
-              sharing_allowed: true,
-              islamic_month: 'Ramadan',
-              currency: 'PKR',
-              status: 'active',
-              bookings: 8,
-              capacity: 30
-            },
-            {
-              id: 3,
-              name: '10 Days Shawwal Budget Package',
-              airport: 'Lahore',
-              travel_date: '2026-04-10',
-              duration: 10,
-              makkah_hotel: 'Makkah Inn',
-              madina_hotel: 'Medina Plaza',
-              distance_makkah: 400,
-              distance_madina: 450,
-              adult_sharing: 95000,
-              quad: 105000,
-              triple: 115000,
-              double: 125000,
-              child_with_bed: 65000,
-              child_without_bed: 55000,
-              infant: 20000,
-              sharing_allowed: true,
-              islamic_month: 'Shawwal',
-              currency: 'PKR',
-              status: 'active',
-              bookings: 5,
-              capacity: 40
-            }
-          ]);
-
-          const [passengerRules, setPassengerRules] = useState([
-            { id: 1, package_id: 1, package_name: '14 Days Ramadan Economy', min_adults: 1, max_adults: 10, min_children: 0, max_children: 5, max_infants: 2, sharing_required: false, special_conditions: 'Children above 12 years charged as adults', status: 'active' },
-            { id: 2, package_id: 2, package_name: '14 Days Ramadan Premium', min_adults: 2, max_adults: 8, min_children: 0, max_children: 4, max_infants: 1, sharing_required: true, special_conditions: 'Minimum 2 adults required for booking', status: 'active' },
-            { id: 3, package_id: 3, package_name: '10 Days Shawwal Budget', min_adults: 1, max_adults: 12, min_children: 0, max_children: 6, max_infants: 2, sharing_required: false, special_conditions: 'Flexible group sizes', status: 'active' }
-          ]);
-
-          const [showModal, setShowModal] = useState(false);
-          const [modalType, setModalType] = useState('');
-          const [selectedItem, setSelectedItem] = useState(null);
-          const [searchQuery, setSearchQuery] = useState('');
-          const [filterAirport, setFilterAirport] = useState('all');
-          const [filterStatus, setFilterStatus] = useState('all');
-          const [filterMonth, setFilterMonth] = useState('all');
-
-          const airports = ['Karachi', 'Lahore', 'Islamabad', 'Sialkot', 'Multan', 'Peshawar'];
-          const islamicMonths = ['Ramadan', 'Shawwal', 'Dhul-Hijjah', 'Muharram', 'Any'];
-
-          const getStatusBadge = (status) => {
-            const styles = {
-              active: 'bg-green-100 text-green-700',
-              inactive: 'bg-gray-100 text-gray-700',
-              sold_out: 'bg-red-100 text-red-700'
-            };
-            return <span className={`px-3 py-1 rounded-full text-xs font-semibold ${styles[status]}`}>{status}</span>;
-          };
-
-          const filteredPackages = packages.filter(pkg => {
-            const matchesSearch = pkg.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                                 pkg.makkah_hotel.toLowerCase().includes(searchQuery.toLowerCase());
-            const matchesAirport = filterAirport === 'all' || pkg.airport === filterAirport;
-            const matchesStatus = filterStatus === 'all' || pkg.status === filterStatus;
-            const matchesMonth = filterMonth === 'all' || pkg.islamic_month === filterMonth;
-            return matchesSearch && matchesAirport && matchesStatus && matchesMonth;
-          });
-
-          return (
-            <div className="min-h-screen bg-gray-50">
-              {/* Header */}
-              <div className="bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 text-white shadow-lg">
-                <div className="max-w-7xl mx-auto px-6 py-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h1 className="text-3xl font-bold">📦 Package Management System</h1>
-                      <p className="text-blue-100 mt-1">Manage Umrah Packages & Passenger Rules</p>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <div className="bg-white/20 backdrop-blur px-4 py-2 rounded-lg">
-                        <p className="text-sm text-blue-100">Total Packages</p>
-                        <p className="text-2xl font-bold">{packages.length}</p>
-                      </div>
-                      <div className="bg-white/20 backdrop-blur px-4 py-2 rounded-lg">
-                        <p className="text-sm text-blue-100">Active</p>
-                        <p className="text-2xl font-bold">{packages.filter(p => p.status === 'active').length}</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Navigation Tabs */}
-              <div className="bg-white shadow-md border-b">
-                <div className="max-w-7xl mx-auto px-6">
-                  <div className="flex gap-6">
-                    {['packages', 'passenger-rules'].map(tab => (
-                      <button
-                        key={tab}
-                        onClick={() => setActiveTab(tab)}
-                        className={`py-4 px-6 font-semibold capitalize transition-colors border-b-2 ${
-                          activeTab === tab 
-                            ? 'border-blue-600 text-blue-600' 
-                            : 'border-transparent text-gray-600 hover:text-blue-600'
-                        }`}
-                      >
-                        {tab.replace('-', ' ')}
-                      </button>
-                    ))}
-                    <a href="index.html" className="py-4 px-6 font-semibold text-gray-600 hover:text-blue-600">
-                      ← Back to Home
+<body class="bg-gray-50">
+    <!-- Navigation -->
+    <nav class="bg-white shadow-lg sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center space-x-4">
+                    <a href="index.html" class="flex items-center">
+                        <i class="fas fa-kaaba text-2xl text-purple-600 mr-2"></i>
+                        <span class="text-xl font-bold text-gray-800">UmrahFlex</span>
                     </a>
-                  </div>
+                    <span class="text-gray-300">|</span>
+                    <span class="text-gray-600 font-medium">Package Management</span>
                 </div>
-              </div>
-
-              <div className="max-w-7xl mx-auto px-6 py-8">
-                
-                {/* Packages Tab */}
-                {activeTab === 'packages' && (
-                  <div>
-                    <div className="flex items-center justify-between mb-6">
-                      <h2 className="text-2xl font-bold text-gray-800">All Packages</h2>
-                      <button
-                        onClick={() => alert('Add package feature - Connect to n8n API')}
-                        className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 font-semibold flex items-center gap-2"
-                      >
-                        <Icons.Plus />
-                        Add New Package
-                      </button>
-                    </div>
-
-                    {/* Filters */}
-                    <div className="bg-white rounded-xl shadow-md p-4 mb-6">
-                      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                        <input
-                          type="text"
-                          placeholder="Search packages..."
-                          value={searchQuery}
-                          onChange={(e) => setSearchQuery(e.target.value)}
-                          className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                        />
-                        <select
-                          value={filterAirport}
-                          onChange={(e) => setFilterAirport(e.target.value)}
-                          className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                        >
-                          <option value="all">All Airports</option>
-                          {airports.map(airport => (
-                            <option key={airport} value={airport}>{airport}</option>
-                          ))}
-                        </select>
-                        <select
-                          value={filterMonth}
-                          onChange={(e) => setFilterMonth(e.target.value)}
-                          className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                        >
-                          <option value="all">All Months</option>
-                          {islamicMonths.map(month => (
-                            <option key={month} value={month}>{month}</option>
-                          ))}
-                        </select>
-                        <select
-                          value={filterStatus}
-                          onChange={(e) => setFilterStatus(e.target.value)}
-                          className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                        >
-                          <option value="all">All Status</option>
-                          <option value="active">Active</option>
-                          <option value="inactive">Inactive</option>
-                          <option value="sold_out">Sold Out</option>
-                        </select>
-                      </div>
-                    </div>
-
-                    {/* Package Cards */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                      {filteredPackages.map(pkg => (
-                        <div key={pkg.id} className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow">
-                          <div className="bg-gradient-to-r from-blue-500 to-purple-600 text-white p-4">
-                            <div className="flex items-start justify-between">
-                              <div className="flex-1">
-                                <h3 className="font-bold text-lg mb-1">{pkg.name}</h3>
-                                <div className="flex items-center gap-2 text-sm">
-                                  <Icons.MapPin />
-                                  <span>{pkg.airport}</span>
-                                  <span>•</span>
-                                  <span>{pkg.duration} Days</span>
-                                </div>
-                              </div>
-                              {getStatusBadge(pkg.status)}
-                            </div>
-                          </div>
-                          
-                          <div className="p-4 space-y-3">
-                            <div className="flex items-center justify-between text-sm">
-                              <span className="text-gray-600">Travel Date</span>
-                              <span className="font-semibold">{new Date(pkg.travel_date).toLocaleDateString()}</span>
-                            </div>
-                            <div className="flex items-center justify-between text-sm">
-                              <span className="text-gray-600">Islamic Month</span>
-                              <span className="font-semibold">{pkg.islamic_month}</span>
-                            </div>
-                            <div className="border-t pt-3">
-                              <div className="flex items-center justify-between text-sm mb-2">
-                                <span className="text-gray-600">Makkah Hotel</span>
-                                <span className="font-semibold text-xs">{pkg.distance_makkah}m</span>
-                              </div>
-                              <p className="text-sm font-medium text-gray-800">{pkg.makkah_hotel}</p>
-                            </div>
-                            <div className="border-t pt-3">
-                              <div className="flex items-center justify-between">
-                                <div>
-                                  <p className="text-xs text-gray-600">Starting from</p>
-                                  <p className="text-xl font-bold text-blue-600">PKR {pkg.adult_sharing.toLocaleString()}</p>
-                                </div>
-                                <div className="text-right">
-                                  <p className="text-xs text-gray-600">Availability</p>
-                                  <p className="text-sm font-semibold text-green-600">{pkg.capacity - pkg.bookings} / {pkg.capacity}</p>
-                                </div>
-                              </div>
-                            </div>
-                            
-                            <div className="flex gap-2 pt-2">
-                              <button
-                                onClick={() => alert('View package details')}
-                                className="flex-1 bg-blue-100 text-blue-700 py-2 px-3 rounded-lg hover:bg-blue-200 font-semibold text-sm flex items-center justify-center gap-1"
-                              >
-                                <Icons.Eye />
-                                View
-                              </button>
-                              <button
-                                onClick={() => alert('Edit package - Connect to n8n API')}
-                                className="flex-1 bg-green-100 text-green-700 py-2 px-3 rounded-lg hover:bg-green-200 font-semibold text-sm flex items-center justify-center gap-1"
-                              >
-                                <Icons.Edit />
-                                Edit
-                              </button>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Passenger Rules Tab */}
-                {activeTab === 'passenger-rules' && (
-                  <div>
-                    <div className="flex items-center justify-between mb-6">
-                      <h2 className="text-2xl font-bold text-gray-800">Passenger Rules</h2>
-                      <button
-                        onClick={() => alert('Add rule - Connect to n8n API')}
-                        className="bg-purple-600 text-white px-6 py-3 rounded-lg hover:bg-purple-700 font-semibold flex items-center gap-2"
-                      >
-                        <Icons.Plus />
-                        Add Rule
-                      </button>
-                    </div>
-
-                    <div className="bg-white rounded-xl shadow-lg overflow-hidden">
-                      <table className="w-full">
-                        <thead className="bg-gray-100 border-b">
-                          <tr>
-                            <th className="text-left p-4 font-semibold text-gray-700">Package</th>
-                            <th className="text-center p-4 font-semibold text-gray-700">Min Adults</th>
-                            <th className="text-center p-4 font-semibold text-gray-700">Max Adults</th>
-                            <th className="text-center p-4 font-semibold text-gray-700">Max Children</th>
-                            <th className="text-center p-4 font-semibold text-gray-700">Max Infants</th>
-                            <th className="text-center p-4 font-semibold text-gray-700">Sharing</th>
-                            <th className="text-center p-4 font-semibold text-gray-700">Status</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {passengerRules.map(rule => (
-                            <tr key={rule.id} className="border-b hover:bg-gray-50">
-                              <td className="p-4">
-                                <p className="font-semibold text-gray-800">{rule.package_name}</p>
-                                {rule.special_conditions && (
-                                  <p className="text-xs text-gray-500 mt-1">{rule.special_conditions}</p>
-                                )}
-                              </td>
-                              <td className="p-4 text-center text-gray-600">{rule.min_adults}</td>
-                              <td className="p-4 text-center text-gray-600">{rule.max_adults}</td>
-                              <td className="p-4 text-center text-gray-600">{rule.max_children}</td>
-                              <td className="p-4 text-center text-gray-600">{rule.max_infants}</td>
-                              <td className="p-4 text-center">
-                                {rule.sharing_required ? (
-                                  <Icons.CheckCircle className="text-green-600 mx-auto" />
-                                ) : (
-                                  <Icons.XCircle className="text-gray-400 mx-auto" />
-                                )}
-                              </td>
-                              <td className="p-4 text-center">{getStatusBadge(rule.status)}</td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-                )}
-              </div>
+                <div class="flex items-center space-x-4">
+                    <a href="admin-panel.html" class="text-gray-600 hover:text-purple-600 transition">
+                        <i class="fas fa-chart-line mr-1"></i> Dashboard
+                    </a>
+                    <a href="index.html" class="text-gray-600 hover:text-purple-600 transition">
+                        <i class="fas fa-home mr-1"></i> Home
+                    </a>
+                </div>
             </div>
-          );
+        </div>
+    </nav>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Header -->
+        <div class="flex justify-between items-center mb-6">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-900">Package Management</h1>
+                <p class="text-gray-600 mt-1">Manage all Umrah packages with complete details</p>
+            </div>
+            <button onclick="openAddModal()" class="bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-lg font-semibold transition">
+                <i class="fas fa-plus mr-2"></i>Add Package
+            </button>
+        </div>
+
+        <!-- Filters -->
+        <div class="bg-white rounded-lg shadow-md p-4 mb-6">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Airport</label>
+                    <select id="filterAirport" onchange="filterPackages()" class="w-full border border-gray-300 rounded-lg px-3 py-2">
+                        <option value="">All Airports</option>
+                        <option value="Lahore">Lahore</option>
+                        <option value="Karachi">Karachi</option>
+                        <option value="Islamabad">Islamabad</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Month</label>
+                    <select id="filterMonth" onchange="filterPackages()" class="w-full border border-gray-300 rounded-lg px-3 py-2">
+                        <option value="">All Months</option>
+                        <option value="Ramadan">Ramadan</option>
+                        <option value="Shawwal">Shawwal</option>
+                        <option value="Dhul-Hijjah">Dhul-Hijjah</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                    <select id="filterStatus" onchange="filterPackages()" class="w-full border border-gray-300 rounded-lg px-3 py-2">
+                        <option value="">All Status</option>
+                        <option value="Active">Active</option>
+                        <option value="Inactive">Inactive</option>
+                        <option value="Sold Out">Sold Out</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Search</label>
+                    <input type="text" id="searchPackage" onkeyup="filterPackages()" placeholder="Search packages..." 
+                           class="w-full border border-gray-300 rounded-lg px-3 py-2">
+                </div>
+            </div>
+        </div>
+
+        <!-- Packages Table -->
+        <div class="bg-white rounded-lg shadow-md overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">ID</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Package Name</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Airport</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Duration</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Hotels</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Sharing Price</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Via Flight</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="packagesTableBody" class="bg-white divide-y divide-gray-200">
+                        <!-- Sample Data -->
+                        <tr>
+                            <td class="px-4 py-3 text-sm text-gray-900">1</td>
+                            <td class="px-4 py-3 text-sm font-medium text-gray-900">Ramadan Special 15 Days</td>
+                            <td class="px-4 py-3 text-sm text-gray-600">Lahore</td>
+                            <td class="px-4 py-3 text-sm text-gray-600">2025-03-15</td>
+                            <td class="px-4 py-3 text-sm text-gray-600">15 Days</td>
+                            <td class="px-4 py-3 text-sm text-gray-600">
+                                <div>Makkah: Al Shohada (400m)</div>
+                                <div>Madina: Dar Al Taqwa (300m)</div>
+                            </td>
+                            <td class="px-4 py-3 text-sm font-semibold text-gray-900">PKR 285,000</td>
+                            <td class="px-4 py-3 text-sm">
+                                <span class="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs">Yes (Dubai)</span>
+                            </td>
+                            <td class="px-4 py-3">
+                                <span class="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium">Active</span>
+                            </td>
+                            <td class="px-4 py-3 text-sm">
+                                <button onclick="viewPackage(1)" class="text-blue-600 hover:text-blue-800 mr-2">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                <button onclick="editPackage(1)" class="text-purple-600 hover:text-purple-800 mr-2">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button onclick="deletePackage(1)" class="text-red-600 hover:text-red-800">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Summary Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mt-6">
+            <div class="bg-white rounded-lg shadow p-4">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm text-gray-600">Total Packages</p>
+                        <p class="text-2xl font-bold text-gray-900">24</p>
+                    </div>
+                    <div class="bg-purple-100 rounded-full p-3">
+                        <i class="fas fa-box text-purple-600 text-xl"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-white rounded-lg shadow p-4">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm text-gray-600">Active Packages</p>
+                        <p class="text-2xl font-bold text-green-600">18</p>
+                    </div>
+                    <div class="bg-green-100 rounded-full p-3">
+                        <i class="fas fa-check-circle text-green-600 text-xl"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-white rounded-lg shadow p-4">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm text-gray-600">Sold Out</p>
+                        <p class="text-2xl font-bold text-red-600">3</p>
+                    </div>
+                    <div class="bg-red-100 rounded-full p-3">
+                        <i class="fas fa-times-circle text-red-600 text-xl"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-white rounded-lg shadow p-4">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm text-gray-600">Avg. Price</p>
+                        <p class="text-2xl font-bold text-blue-600">PKR 275K</p>
+                    </div>
+                    <div class="bg-blue-100 rounded-full p-3">
+                        <i class="fas fa-dollar-sign text-blue-600 text-xl"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add/Edit Package Modal -->
+    <div id="packageModal" class="modal fixed inset-0 bg-black bg-opacity-50 items-center justify-center z-50">
+        <div class="bg-white rounded-lg shadow-xl max-w-5xl w-full mx-4 max-h-screen overflow-y-auto">
+            <div class="sticky top-0 bg-white border-b px-6 py-4 flex justify-between items-center">
+                <h2 class="text-2xl font-bold text-gray-900" id="modalTitle">Add New Package</h2>
+                <button onclick="closeModal()" class="text-gray-400 hover:text-gray-600">
+                    <i class="fas fa-times text-2xl"></i>
+                </button>
+            </div>
+
+            <form id="packageForm" class="p-6">
+                <!-- Basic Information -->
+                <div class="mb-6">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                        <i class="fas fa-info-circle text-purple-600 mr-2"></i>
+                        Basic Information
+                    </h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Package Name *</label>
+                            <input type="text" name="package_name" required 
+                                   class="w-full border border-gray-300 rounded-lg px-3 py-2"
+                                   placeholder="e.g., Ramadan Special 15 Days">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Departure Airport *</label>
+                            <select name="departure_airport" required class="w-full border border-gray-300 rounded-lg px-3 py-2">
+                                <option value="">Select Airport</option>
+                                <option value="Lahore">Lahore</option>
+                                <option value="Karachi">Karachi</option>
+                                <option value="Islamabad">Islamabad</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Travel Date *</label>
+                            <input type="date" name="travel_date" required 
+                                   class="w-full border border-gray-300 rounded-lg px-3 py-2">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Duration (Days) *</label>
+                            <input type="number" name="duration_days" required min="5" max="60"
+                                   class="w-full border border-gray-300 rounded-lg px-3 py-2"
+                                   placeholder="e.g., 15">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Islamic Month *</label>
+                            <select name="islamic_month" required class="w-full border border-gray-300 rounded-lg px-3 py-2">
+                                <option value="">Select Month</option>
+                                <option value="Muharram">Muharram</option>
+                                <option value="Safar">Safar</option>
+                                <option value="Rabi-ul-Awwal">Rabi-ul-Awwal</option>
+                                <option value="Rabi-ul-Akhir">Rabi-ul-Akhir</option>
+                                <option value="Jumada-al-Awwal">Jumada-al-Awwal</option>
+                                <option value="Jumada-al-Akhir">Jumada-al-Akhir</option>
+                                <option value="Rajab">Rajab</option>
+                                <option value="Shaban">Shaban</option>
+                                <option value="Ramadan">Ramadan</option>
+                                <option value="Shawwal">Shawwal</option>
+                                <option value="Dhul-Qadah">Dhul-Qadah</option>
+                                <option value="Dhul-Hijjah">Dhul-Hijjah</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Currency *</label>
+                            <select name="currency" required class="w-full border border-gray-300 rounded-lg px-3 py-2">
+                                <option value="PKR">PKR - Pakistani Rupee</option>
+                                <option value="USD">USD - US Dollar</option>
+                                <option value="SAR">SAR - Saudi Riyal</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Hotel Details -->
+                <div class="mb-6">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                        <i class="fas fa-hotel text-blue-600 mr-2"></i>
+                        Hotel Details
+                    </h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="border border-gray-200 rounded-lg p-4">
+                            <h4 class="font-semibold text-gray-800 mb-3">Makkah Hotel</h4>
+                            <div class="space-y-3">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Hotel Name *</label>
+                                    <input type="text" name="makkah_hotel" required 
+                                           class="w-full border border-gray-300 rounded-lg px-3 py-2"
+                                           placeholder="e.g., Al Shohada Hotel">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Distance from Haram (meters) *</label>
+                                    <input type="number" name="hotel_distance_makkah_m" required min="0"
+                                           class="w-full border border-gray-300 rounded-lg px-3 py-2"
+                                           placeholder="e.g., 400">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="border border-gray-200 rounded-lg p-4">
+                            <h4 class="font-semibold text-gray-800 mb-3">Madina Hotel</h4>
+                            <div class="space-y-3">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Hotel Name *</label>
+                                    <input type="text" name="madina_hotel" required 
+                                           class="w-full border border-gray-300 rounded-lg px-3 py-2"
+                                           placeholder="e.g., Dar Al Taqwa Hotel">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Distance from Masjid Nabawi (meters) *</label>
+                                    <input type="number" name="hotel_distance_medina_m" required min="0"
+                                           class="w-full border border-gray-300 rounded-lg px-3 py-2"
+                                           placeholder="e.g., 300">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Flight Details -->
+                <div class="mb-6">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                        <i class="fas fa-plane text-indigo-600 mr-2"></i>
+                        Flight Details
+                    </h3>
+                    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                        <div class="flex items-center mb-4">
+                            <input type="checkbox" id="viaFlight" name="via_flight" onchange="toggleFlightDetails()"
+                                   class="w-4 h-4 text-blue-600 rounded">
+                            <label for="viaFlight" class="ml-2 text-sm font-medium text-gray-700">
+                                Via Flight (Layover/Transit)
+                            </label>
+                        </div>
+                        
+                        <div id="flightDetailsSection" style="display: none;">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <!-- Going Flight -->
+                                <div class="border border-blue-300 rounded-lg p-4 bg-white">
+                                    <h4 class="font-semibold text-gray-800 mb-3 flex items-center">
+                                        <i class="fas fa-plane-departure text-green-600 mr-2"></i>
+                                        Going Flight (Pakistan → Saudi Arabia)
+                                    </h4>
+                                    <div class="space-y-3">
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-1">Layover City</label>
+                                            <input type="text" name="going_layover_city" 
+                                                   class="w-full border border-gray-300 rounded-lg px-3 py-2"
+                                                   placeholder="e.g., Dubai, Sharjah, Jeddah">
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-1">Layover Duration (hours)</label>
+                                            <input type="number" name="going_layover_duration" step="0.5" min="0"
+                                                   class="w-full border border-gray-300 rounded-lg px-3 py-2"
+                                                   placeholder="e.g., 3.5">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Return Flight -->
+                                <div class="border border-blue-300 rounded-lg p-4 bg-white">
+                                    <h4 class="font-semibold text-gray-800 mb-3 flex items-center">
+                                        <i class="fas fa-plane-arrival text-orange-600 mr-2"></i>
+                                        Return Flight (Saudi Arabia → Pakistan)
+                                    </h4>
+                                    <div class="space-y-3">
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-1">Layover City</label>
+                                            <input type="text" name="return_layover_city" 
+                                                   class="w-full border border-gray-300 rounded-lg px-3 py-2"
+                                                   placeholder="e.g., Dubai, Sharjah, Jeddah">
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-1">Layover Duration (hours)</label>
+                                            <input type="number" name="return_layover_duration" step="0.5" min="0"
+                                                   class="w-full border border-gray-300 rounded-lg px-3 py-2"
+                                                   placeholder="e.g., 2.5">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mt-3 text-sm text-gray-600 bg-blue-100 p-3 rounded">
+                                <i class="fas fa-info-circle mr-1"></i>
+                                <strong>Note:</strong> If direct flight, leave layover fields empty
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Pricing Details -->
+                <div class="mb-6">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                        <i class="fas fa-tags text-green-600 mr-2"></i>
+                        Pricing Details (Per Person)
+                    </h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Sharing Price *</label>
+                            <input type="number" name="adult_sharing_price" required min="0"
+                                   class="w-full border border-gray-300 rounded-lg px-3 py-2"
+                                   placeholder="e.g., 285000">
+                            <p class="text-xs text-gray-500 mt-1">4+ people sharing room</p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Quad Price</label>
+                            <input type="number" name="quad_price" min="0"
+                                   class="w-full border border-gray-300 rounded-lg px-3 py-2"
+                                   placeholder="e.g., 295000">
+                            <p class="text-xs text-gray-500 mt-1">4 people in room</p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Triple Price</label>
+                            <input type="number" name="triple_price" min="0"
+                                   class="w-full border border-gray-300 rounded-lg px-3 py-2"
+                                   placeholder="e.g., 310000">
+                            <p class="text-xs text-gray-500 mt-1">3 people in room</p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Double Price</label>
+                            <input type="number" name="double_price" min="0"
+                                   class="w-full border border-gray-300 rounded-lg px-3 py-2"
+                                   placeholder="e.g., 335000">
+                            <p class="text-xs text-gray-500 mt-1">2 people in room</p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Child with Bed</label>
+                            <input type="number" name="child_with_bed_price" min="0"
+                                   class="w-full border border-gray-300 rounded-lg px-3 py-2"
+                                   placeholder="e.g., 240000">
+                            <p class="text-xs text-gray-500 mt-1">2-12 years with bed</p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Child without Bed</label>
+                            <input type="number" name="child_without_bed_price" min="0"
+                                   class="w-full border border-gray-300 rounded-lg px-3 py-2"
+                                   placeholder="e.g., 200000">
+                            <p class="text-xs text-gray-500 mt-1">2-12 years no bed</p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Infant Price</label>
+                            <input type="number" name="infant_price" min="0"
+                                   class="w-full border border-gray-300 rounded-lg px-3 py-2"
+                                   placeholder="e.g., 50000">
+                            <p class="text-xs text-gray-500 mt-1">0-2 years</p>
+                        </div>
+                        <div class="md:col-span-2">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Sharing Allowed</label>
+                            <div class="flex items-center space-x-6 mt-2">
+                                <label class="flex items-center">
+                                    <input type="radio" name="sharing_allowed" value="Yes" checked
+                                           class="w-4 h-4 text-purple-600">
+                                    <span class="ml-2 text-sm text-gray-700">Yes</span>
+                                </label>
+                                <label class="flex items-center">
+                                    <input type="radio" name="sharing_allowed" value="No"
+                                           class="w-4 h-4 text-purple-600">
+                                    <span class="ml-2 text-sm text-gray-700">No</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Status -->
+                <div class="mb-6">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                        <i class="fas fa-toggle-on text-yellow-600 mr-2"></i>
+                        Package Status
+                    </h3>
+                    <div class="flex items-center space-x-6">
+                        <label class="flex items-center">
+                            <input type="radio" name="status" value="Active" checked
+                                   class="w-4 h-4 text-green-600">
+                            <span class="ml-2 text-sm font-medium text-gray-700">Active</span>
+                        </label>
+                        <label class="flex items-center">
+                            <input type="radio" name="status" value="Inactive"
+                                   class="w-4 h-4 text-gray-600">
+                            <span class="ml-2 text-sm font-medium text-gray-700">Inactive</span>
+                        </label>
+                        <label class="flex items-center">
+                            <input type="radio" name="status" value="Sold Out"
+                                   class="w-4 h-4 text-red-600">
+                            <span class="ml-2 text-sm font-medium text-gray-700">Sold Out</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Form Actions -->
+                <div class="flex justify-end space-x-4 pt-4 border-t">
+                    <button type="button" onclick="closeModal()" 
+                            class="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition">
+                        Cancel
+                    </button>
+                    <button type="submit" 
+                            class="px-6 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-semibold transition">
+                        <i class="fas fa-save mr-2"></i>Save Package
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Toggle flight details section
+        function toggleFlightDetails() {
+            const checkbox = document.getElementById('viaFlight');
+            const section = document.getElementById('flightDetailsSection');
+            section.style.display = checkbox.checked ? 'block' : 'none';
         }
 
-        // Render
-        const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(<PackageManagementPanel />);
+        // Open add modal
+        function openAddModal() {
+            document.getElementById('modalTitle').textContent = 'Add New Package';
+            document.getElementById('packageForm').reset();
+            document.getElementById('packageModal').classList.add('active');
+        }
+
+        // Close modal
+        function closeModal() {
+            document.getElementById('packageModal').classList.remove('active');
+        }
+
+        // Filter packages
+        function filterPackages() {
+            const airport = document.getElementById('filterAirport').value;
+            const month = document.getElementById('filterMonth').value;
+            const status = document.getElementById('filterStatus').value;
+            const search = document.getElementById('searchPackage').value.toLowerCase();
+            
+            // API call would go here
+            console.log('Filtering:', { airport, month, status, search });
+        }
+
+        // View package details
+        function viewPackage(id) {
+            alert('View Package ID: ' + id + '\n\nComplete details will be shown here.');
+        }
+
+        // Edit package
+        function editPackage(id) {
+            document.getElementById('modalTitle').textContent = 'Edit Package';
+            // Load package data and populate form
+            document.getElementById('packageModal').classList.add('active');
+        }
+
+        // Delete package
+        function deletePackage(id) {
+            if (confirm('Are you sure you want to delete this package?')) {
+                console.log('Deleting package:', id);
+                alert('Package deleted successfully!');
+            }
+        }
+
+        // Form submission
+        document.getElementById('packageForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const packageData = {};
+            
+            formData.forEach((value, key) => {
+                packageData[key] = value;
+            });
+            
+            console.log('Package Data:', packageData);
+            alert('Package saved successfully!');
+            closeModal();
+        });
+
+        // Close modal on outside click
+        document.getElementById('packageModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeModal();
+            }
+        });
     </script>
 </body>
 </html>
