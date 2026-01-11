@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Package Management - Umrah System</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- React & ReactDOM -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    
+    <!-- Babel for JSX -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+    
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+        
+        // ⚙️ CONFIGURATION - UPDATE THIS WITH YOUR n8n URL
+        const API_URL = 'https://api.umrahflex.com';
+        
+        // Simple Icon Components (replacing lucide-react)
+        const Icons = {
+            Plus: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>,
+            Edit: () => <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>,
+            Trash2: () => <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>,
+            Eye: () => <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>,
+            Copy: () => <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>,
+            Calendar: () => <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>,
+            MapPin: () => <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>,
+            Hotel: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>,
+            DollarSign: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>,
+            CheckCircle: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>,
+            XCircle: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>,
+        };
+
+        // Main Component - Your exact code with Icons replaced
+        function PackageManagementPanel() {
+          const [activeTab, setActiveTab] = useState('packages');
+          const [packages, setPackages] = useState([
+            {
+              id: 1,
+              name: '14 Days Ramadan Economy Package',
+              airport: 'Karachi',
+              travel_date: '2026-03-15',
+              duration: 14,
+              makkah_hotel: 'Al Shohada Hotel',
+              madina_hotel: 'Dar Al Taqwa Hotel',
+              distance_makkah: 250,
+              distance_madina: 300,
+              adult_sharing: 145000,
+              quad: 155000,
+              triple: 165000,
+              double: 185000,
+              child_with_bed: 95000,
+              child_without_bed: 75000,
+              infant: 25000,
+              sharing_allowed: true,
+              islamic_month: 'Ramadan',
+              currency: 'PKR',
+              status: 'active',
+              bookings: 12,
+              capacity: 50
+            },
+            {
+              id: 2,
+              name: '14 Days Ramadan Premium Package',
+              airport: 'Karachi',
+              travel_date: '2026-03-15',
+              duration: 14,
+              makkah_hotel: 'Hilton Suites',
+              madina_hotel: 'Millennium Hotel',
+              distance_makkah: 100,
+              distance_madina: 150,
+              adult_sharing: 225000,
+              quad: 245000,
+              triple: 265000,
+              double: 295000,
+              child_with_bed: 145000,
+              child_without_bed: 125000,
+              infant: 35000,
+              sharing_allowed: true,
+              islamic_month: 'Ramadan',
+              currency: 'PKR',
+              status: 'active',
+              bookings: 8,
+              capacity: 30
+            },
+            {
+              id: 3,
+              name: '10 Days Shawwal Budget Package',
+              airport: 'Lahore',
+              travel_date: '2026-04-10',
+              duration: 10,
+              makkah_hotel: 'Makkah Inn',
+              madina_hotel: 'Medina Plaza',
+              distance_makkah: 400,
+              distance_madina: 450,
+              adult_sharing: 95000,
+              quad: 105000,
+              triple: 115000,
+              double: 125000,
+              child_with_bed: 65000,
+              child_without_bed: 55000,
+              infant: 20000,
+              sharing_allowed: true,
+              islamic_month: 'Shawwal',
+              currency: 'PKR',
+              status: 'active',
+              bookings: 5,
+              capacity: 40
+            }
+          ]);
+
+          const [passengerRules, setPassengerRules] = useState([
+            { id: 1, package_id: 1, package_name: '14 Days Ramadan Economy', min_adults: 1, max_adults: 10, min_children: 0, max_children: 5, max_infants: 2, sharing_required: false, special_conditions: 'Children above 12 years charged as adults', status: 'active' },
+            { id: 2, package_id: 2, package_name: '14 Days Ramadan Premium', min_adults: 2, max_adults: 8, min_children: 0, max_children: 4, max_infants: 1, sharing_required: true, special_conditions: 'Minimum 2 adults required for booking', status: 'active' },
+            { id: 3, package_id: 3, package_name: '10 Days Shawwal Budget', min_adults: 1, max_adults: 12, min_children: 0, max_children: 6, max_infants: 2, sharing_required: false, special_conditions: 'Flexible group sizes', status: 'active' }
+          ]);
+
+          const [showModal, setShowModal] = useState(false);
+          const [modalType, setModalType] = useState('');
+          const [selectedItem, setSelectedItem] = useState(null);
+          const [searchQuery, setSearchQuery] = useState('');
+          const [filterAirport, setFilterAirport] = useState('all');
+          const [filterStatus, setFilterStatus] = useState('all');
+          const [filterMonth, setFilterMonth] = useState('all');
+
+          const airports = ['Karachi', 'Lahore', 'Islamabad', 'Sialkot', 'Multan', 'Peshawar'];
+          const islamicMonths = ['Ramadan', 'Shawwal', 'Dhul-Hijjah', 'Muharram', 'Any'];
+
+          const getStatusBadge = (status) => {
+            const styles = {
+              active: 'bg-green-100 text-green-700',
+              inactive: 'bg-gray-100 text-gray-700',
+              sold_out: 'bg-red-100 text-red-700'
+            };
+            return <span className={`px-3 py-1 rounded-full text-xs font-semibold ${styles[status]}`}>{status}</span>;
+          };
+
+          const filteredPackages = packages.filter(pkg => {
+            const matchesSearch = pkg.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                                 pkg.makkah_hotel.toLowerCase().includes(searchQuery.toLowerCase());
+            const matchesAirport = filterAirport === 'all' || pkg.airport === filterAirport;
+            const matchesStatus = filterStatus === 'all' || pkg.status === filterStatus;
+            const matchesMonth = filterMonth === 'all' || pkg.islamic_month === filterMonth;
+            return matchesSearch && matchesAirport && matchesStatus && matchesMonth;
+          });
+
+          return (
+            <div className="min-h-screen bg-gray-50">
+              {/* Header */}
+              <div className="bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 text-white shadow-lg">
+                <div className="max-w-7xl mx-auto px-6 py-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h1 className="text-3xl font-bold">📦 Package Management System</h1>
+                      <p className="text-blue-100 mt-1">Manage Umrah Packages & Passenger Rules</p>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <div className="bg-white/20 backdrop-blur px-4 py-2 rounded-lg">
+                        <p className="text-sm text-blue-100">Total Packages</p>
+                        <p className="text-2xl font-bold">{packages.length}</p>
+                      </div>
+                      <div className="bg-white/20 backdrop-blur px-4 py-2 rounded-lg">
+                        <p className="text-sm text-blue-100">Active</p>
+                        <p className="text-2xl font-bold">{packages.filter(p => p.status === 'active').length}</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Navigation Tabs */}
+              <div className="bg-white shadow-md border-b">
+                <div className="max-w-7xl mx-auto px-6">
+                  <div className="flex gap-6">
+                    {['packages', 'passenger-rules'].map(tab => (
+                      <button
+                        key={tab}
+                        onClick={() => setActiveTab(tab)}
+                        className={`py-4 px-6 font-semibold capitalize transition-colors border-b-2 ${
+                          activeTab === tab 
+                            ? 'border-blue-600 text-blue-600' 
+                            : 'border-transparent text-gray-600 hover:text-blue-600'
+                        }`}
+                      >
+                        {tab.replace('-', ' ')}
+                      </button>
+                    ))}
+                    <a href="index.html" className="py-4 px-6 font-semibold text-gray-600 hover:text-blue-600">
+                      ← Back to Home
+                    </a>
+                  </div>
+                </div>
+              </div>
+
+              <div className="max-w-7xl mx-auto px-6 py-8">
+                
+                {/* Packages Tab */}
+                {activeTab === 'packages' && (
+                  <div>
+                    <div className="flex items-center justify-between mb-6">
+                      <h2 className="text-2xl font-bold text-gray-800">All Packages</h2>
+                      <button
+                        onClick={() => alert('Add package feature - Connect to n8n API')}
+                        className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 font-semibold flex items-center gap-2"
+                      >
+                        <Icons.Plus />
+                        Add New Package
+                      </button>
+                    </div>
+
+                    {/* Filters */}
+                    <div className="bg-white rounded-xl shadow-md p-4 mb-6">
+                      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                        <input
+                          type="text"
+                          placeholder="Search packages..."
+                          value={searchQuery}
+                          onChange={(e) => setSearchQuery(e.target.value)}
+                          className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                        />
+                        <select
+                          value={filterAirport}
+                          onChange={(e) => setFilterAirport(e.target.value)}
+                          className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                        >
+                          <option value="all">All Airports</option>
+                          {airports.map(airport => (
+                            <option key={airport} value={airport}>{airport}</option>
+                          ))}
+                        </select>
+                        <select
+                          value={filterMonth}
+                          onChange={(e) => setFilterMonth(e.target.value)}
+                          className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                        >
+                          <option value="all">All Months</option>
+                          {islamicMonths.map(month => (
+                            <option key={month} value={month}>{month}</option>
+                          ))}
+                        </select>
+                        <select
+                          value={filterStatus}
+                          onChange={(e) => setFilterStatus(e.target.value)}
+                          className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                        >
+                          <option value="all">All Status</option>
+                          <option value="active">Active</option>
+                          <option value="inactive">Inactive</option>
+                          <option value="sold_out">Sold Out</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    {/* Package Cards */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                      {filteredPackages.map(pkg => (
+                        <div key={pkg.id} className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow">
+                          <div className="bg-gradient-to-r from-blue-500 to-purple-600 text-white p-4">
+                            <div className="flex items-start justify-between">
+                              <div className="flex-1">
+                                <h3 className="font-bold text-lg mb-1">{pkg.name}</h3>
+                                <div className="flex items-center gap-2 text-sm">
+                                  <Icons.MapPin />
+                                  <span>{pkg.airport}</span>
+                                  <span>•</span>
+                                  <span>{pkg.duration} Days</span>
+                                </div>
+                              </div>
+                              {getStatusBadge(pkg.status)}
+                            </div>
+                          </div>
+                          
+                          <div className="p-4 space-y-3">
+                            <div className="flex items-center justify-between text-sm">
+                              <span className="text-gray-600">Travel Date</span>
+                              <span className="font-semibold">{new Date(pkg.travel_date).toLocaleDateString()}</span>
+                            </div>
+                            <div className="flex items-center justify-between text-sm">
+                              <span className="text-gray-600">Islamic Month</span>
+                              <span className="font-semibold">{pkg.islamic_month}</span>
+                            </div>
+                            <div className="border-t pt-3">
+                              <div className="flex items-center justify-between text-sm mb-2">
+                                <span className="text-gray-600">Makkah Hotel</span>
+                                <span className="font-semibold text-xs">{pkg.distance_makkah}m</span>
+                              </div>
+                              <p className="text-sm font-medium text-gray-800">{pkg.makkah_hotel}</p>
+                            </div>
+                            <div className="border-t pt-3">
+                              <div className="flex items-center justify-between">
+                                <div>
+                                  <p className="text-xs text-gray-600">Starting from</p>
+                                  <p className="text-xl font-bold text-blue-600">PKR {pkg.adult_sharing.toLocaleString()}</p>
+                                </div>
+                                <div className="text-right">
+                                  <p className="text-xs text-gray-600">Availability</p>
+                                  <p className="text-sm font-semibold text-green-600">{pkg.capacity - pkg.bookings} / {pkg.capacity}</p>
+                                </div>
+                              </div>
+                            </div>
+                            
+                            <div className="flex gap-2 pt-2">
+                              <button
+                                onClick={() => alert('View package details')}
+                                className="flex-1 bg-blue-100 text-blue-700 py-2 px-3 rounded-lg hover:bg-blue-200 font-semibold text-sm flex items-center justify-center gap-1"
+                              >
+                                <Icons.Eye />
+                                View
+                              </button>
+                              <button
+                                onClick={() => alert('Edit package - Connect to n8n API')}
+                                className="flex-1 bg-green-100 text-green-700 py-2 px-3 rounded-lg hover:bg-green-200 font-semibold text-sm flex items-center justify-center gap-1"
+                              >
+                                <Icons.Edit />
+                                Edit
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Passenger Rules Tab */}
+                {activeTab === 'passenger-rules' && (
+                  <div>
+                    <div className="flex items-center justify-between mb-6">
+                      <h2 className="text-2xl font-bold text-gray-800">Passenger Rules</h2>
+                      <button
+                        onClick={() => alert('Add rule - Connect to n8n API')}
+                        className="bg-purple-600 text-white px-6 py-3 rounded-lg hover:bg-purple-700 font-semibold flex items-center gap-2"
+                      >
+                        <Icons.Plus />
+                        Add Rule
+                      </button>
+                    </div>
+
+                    <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+                      <table className="w-full">
+                        <thead className="bg-gray-100 border-b">
+                          <tr>
+                            <th className="text-left p-4 font-semibold text-gray-700">Package</th>
+                            <th className="text-center p-4 font-semibold text-gray-700">Min Adults</th>
+                            <th className="text-center p-4 font-semibold text-gray-700">Max Adults</th>
+                            <th className="text-center p-4 font-semibold text-gray-700">Max Children</th>
+                            <th className="text-center p-4 font-semibold text-gray-700">Max Infants</th>
+                            <th className="text-center p-4 font-semibold text-gray-700">Sharing</th>
+                            <th className="text-center p-4 font-semibold text-gray-700">Status</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {passengerRules.map(rule => (
+                            <tr key={rule.id} className="border-b hover:bg-gray-50">
+                              <td className="p-4">
+                                <p className="font-semibold text-gray-800">{rule.package_name}</p>
+                                {rule.special_conditions && (
+                                  <p className="text-xs text-gray-500 mt-1">{rule.special_conditions}</p>
+                                )}
+                              </td>
+                              <td className="p-4 text-center text-gray-600">{rule.min_adults}</td>
+                              <td className="p-4 text-center text-gray-600">{rule.max_adults}</td>
+                              <td className="p-4 text-center text-gray-600">{rule.max_children}</td>
+                              <td className="p-4 text-center text-gray-600">{rule.max_infants}</td>
+                              <td className="p-4 text-center">
+                                {rule.sharing_required ? (
+                                  <Icons.CheckCircle className="text-green-600 mx-auto" />
+                                ) : (
+                                  <Icons.XCircle className="text-gray-400 mx-auto" />
+                                )}
+                              </td>
+                              <td className="p-4 text-center">{getStatusBadge(rule.status)}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          );
+        }
+
+        // Render
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<PackageManagementPanel />);
+    </script>
+</body>
+</html>
