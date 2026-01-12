@@ -203,12 +203,16 @@
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
                         <div class="bg-white rounded-xl shadow-lg p-6">
                             <h3 class="text-lg font-bold text-gray-900 mb-4">Lead Status Distribution</h3>
-                            <canvas id="leadStatusChart" height="200"></canvas>
+                            <div style="position: relative; height: 300px;">
+                                <canvas id="leadStatusChart"></canvas>
+                            </div>
                         </div>
 
                         <div class="bg-white rounded-xl shadow-lg p-6">
                             <h3 class="text-lg font-bold text-gray-900 mb-4">Packages by Airport</h3>
-                            <canvas id="packageChart" height="200"></canvas>
+                            <div style="position: relative; height: 300px;">
+                                <canvas id="packageChart"></canvas>
+                            </div>
                         </div>
                     </div>
 
@@ -408,15 +412,44 @@
         // =========================
         async function loadDashboardData() {
             try {
-                // Fetch all data
+                console.log('🔄 Loading dashboard data from:', API_URL);
+                
+                // Fetch all data with error handling for each
+                const fetchData = async (endpoint, name) => {
+                    try {
+                        const response = await fetch(`${API_URL}${endpoint}`);
+                        if (!response.ok) {
+                            throw new Error(`HTTP ${response.status}`);
+                        }
+                        const data = await response.json();
+                        console.log(`✅ ${name} loaded:`, data.length || 'N/A', 'items');
+                        return data;
+                    } catch (err) {
+                        console.error(`❌ Failed to load ${name}:`, err);
+                        return [];
+                    }
+                };
+
                 const [packages, leads, offices, teams] = await Promise.all([
-                    fetch(`${API_URL}/packages`).then(r => r.json()),
-                    fetch(`${API_URL}/leads`).then(r => r.json()),
-                    fetch(`${API_URL}/offices`).then(r => r.json()),
-                    fetch(`${API_URL}/teams`).then(r => r.json())
+                    fetchData('/packages', 'Packages'),
+                    fetchData('/leads', 'Leads'),
+                    fetchData('/offices', 'Offices'),
+                    fetchData('/teams', 'Teams')
                 ]);
 
-                dashboardData = { packages, leads, offices, teams };
+                dashboardData = { 
+                    packages: Array.isArray(packages) ? packages : [],
+                    leads: Array.isArray(leads) ? leads : [],
+                    offices: Array.isArray(offices) ? offices : [],
+                    teams: Array.isArray(teams) ? teams : []
+                };
+
+                console.log('📊 Dashboard data loaded:', {
+                    packages: dashboardData.packages.length,
+                    leads: dashboardData.leads.length,
+                    offices: dashboardData.offices.length,
+                    teams: dashboardData.teams.length
+                });
 
                 updateStatistics();
                 updateCharts();
@@ -425,7 +458,7 @@
                 console.log('✅ Dashboard loaded successfully');
             } catch (err) {
                 console.error('❌ Failed to load dashboard:', err);
-                alert('❌ Failed to load dashboard data. Please check your connection.');
+                alert('❌ Failed to load dashboard data. Please check:\n1. Backend is running\n2. SSH tunnel is active\n3. Network connection is stable');
             }
         }
 
@@ -484,6 +517,11 @@
         function updateCharts() {
             const { packages, leads } = dashboardData;
 
+            console.log('📊 Updating charts with data:', { 
+                packagesCount: packages.length, 
+                leadsCount: leads.length 
+            });
+
             // Count statuses (CORRECTED)
             const statusCounts = {
                 new: 0,
@@ -500,89 +538,170 @@
                 }
             });
 
+            console.log('📊 Status counts:', statusCounts);
+
             // Lead Status Chart
-            if (leadStatusChart) leadStatusChart.destroy();
-
-            const ctx1 = document.getElementById('leadStatusChart');
-            leadStatusChart = new Chart(ctx1, {
-                type: 'doughnut',
-                data: {
-                    labels: ['New', 'Contacted', 'Negotiating', 'Deal Done', 'Lost'],
-                    datasets: [{
-                        data: [
-                            statusCounts.new,
-                            statusCounts.contacted,
-                            statusCounts.negotiating,
-                            statusCounts.deal_done,
-                            statusCounts.lost
-                        ],
-                        backgroundColor: [
-                            '#3b82f6', // blue
-                            '#eab308', // yellow
-                            '#10b981', // green
-                            '#8b5cf6', // purple
-                            '#ef4444'  // red
-                        ],
-                        borderWidth: 2,
-                        borderColor: '#ffffff'
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            position: 'bottom'
-                        }
-                    }
+            try {
+                if (leadStatusChart) {
+                    leadStatusChart.destroy();
+                    leadStatusChart = null;
                 }
-            });
 
-            // Package by Airport Chart
-            const airportCounts = {};
-            packages.forEach(p => {
-                const airport = p.departure_airport || 'Unknown';
-                airportCounts[airport] = (airportCounts[airport] || 0) + 1;
-            });
+                const ctx1 = document.getElementById('leadStatusChart');
+                if (!ctx1) {
+                    console.error('❌ Canvas element "leadStatusChart" not found');
+                    return;
+                }
 
-            if (packageChart) packageChart.destroy();
+                const chartData = [
+                    statusCounts.new,
+                    statusCounts.contacted,
+                    statusCounts.negotiating,
+                    statusCounts.deal_done,
+                    statusCounts.lost
+                ];
 
-            const ctx2 = document.getElementById('packageChart');
-            packageChart = new Chart(ctx2, {
-                type: 'bar',
-                data: {
-                    labels: Object.keys(airportCounts),
-                    datasets: [{
-                        label: 'Packages',
-                        data: Object.values(airportCounts),
-                        backgroundColor: [
-                            '#3b82f6',
-                            '#8b5cf6',
-                            '#10b981',
-                            '#f59e0b',
-                            '#ef4444'
-                        ],
-                        borderRadius: 8
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            display: false
-                        }
+                console.log('📊 Lead chart data:', chartData);
+
+                leadStatusChart = new Chart(ctx1, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['New', 'Contacted', 'Negotiating', 'Deal Done', 'Lost'],
+                        datasets: [{
+                            data: chartData,
+                            backgroundColor: [
+                                '#3b82f6', // blue
+                                '#eab308', // yellow
+                                '#10b981', // green
+                                '#8b5cf6', // purple
+                                '#ef4444'  // red
+                            ],
+                            borderWidth: 2,
+                            borderColor: '#ffffff'
+                        }]
                     },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            ticks: {
-                                stepSize: 1
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                                labels: {
+                                    padding: 10,
+                                    font: {
+                                        size: 12
+                                    }
+                                }
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        const label = context.label || '';
+                                        const value = context.parsed || 0;
+                                        const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                        const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
+                                        return `${label}: ${value} (${percentage}%)`;
+                                    }
+                                }
                             }
                         }
                     }
+                });
+
+                console.log('✅ Lead status chart created');
+            } catch (err) {
+                console.error('❌ Failed to create lead status chart:', err);
+            }
+
+            // Package by Airport Chart
+            try {
+                const airportCounts = {};
+                packages.forEach(p => {
+                    const airport = p.departure_airport || 'Unknown';
+                    airportCounts[airport] = (airportCounts[airport] || 0) + 1;
+                });
+
+                console.log('📊 Airport counts:', airportCounts);
+
+                if (packageChart) {
+                    packageChart.destroy();
+                    packageChart = null;
                 }
-            });
+
+                const ctx2 = document.getElementById('packageChart');
+                if (!ctx2) {
+                    console.error('❌ Canvas element "packageChart" not found');
+                    return;
+                }
+
+                const airports = Object.keys(airportCounts);
+                const counts = Object.values(airportCounts);
+
+                console.log('📊 Package chart data:', { airports, counts });
+
+                // If no data, show message
+                if (airports.length === 0) {
+                    ctx2.parentElement.innerHTML = `
+                        <div class="text-center py-8 text-gray-500">
+                            <i class="fas fa-box-open text-4xl mb-2"></i>
+                            <p>No packages available</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                packageChart = new Chart(ctx2, {
+                    type: 'bar',
+                    data: {
+                        labels: airports,
+                        datasets: [{
+                            label: 'Packages',
+                            data: counts,
+                            backgroundColor: '#8b5cf6',
+                            borderRadius: 8,
+                            barThickness: 40
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: false
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        return `Packages: ${context.parsed.y}`;
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: {
+                                    stepSize: 1,
+                                    precision: 0
+                                },
+                                grid: {
+                                    display: true,
+                                    drawBorder: false
+                                }
+                            },
+                            x: {
+                                grid: {
+                                    display: false
+                                }
+                            }
+                        }
+                    }
+                });
+
+                console.log('✅ Package chart created');
+            } catch (err) {
+                console.error('❌ Failed to create package chart:', err);
+            }
         }
 
         // =========================
@@ -984,15 +1103,29 @@
         // =========================
         async function init() {
             try {
+                // Check if Chart.js is loaded
+                if (typeof Chart === 'undefined') {
+                    console.error('❌ Chart.js not loaded!');
+                    alert('Chart.js library failed to load. Please refresh the page.');
+                    return;
+                }
+                
+                console.log('✅ Chart.js loaded:', Chart.version);
+                
                 await loadDashboardData();
                 console.log('✅ Admin panel loaded successfully');
             } catch (err) {
                 console.error('❌ Admin panel initialization error:', err);
+                alert('Failed to initialize admin panel: ' + err.message);
             }
         }
 
-        // Start
-        init();
+        // Wait for DOM to be ready
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', init);
+        } else {
+            init();
+        }
     </script>
 </body>
 </html>
