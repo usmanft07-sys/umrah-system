@@ -3,759 +3,552 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Panel - Umrah System</title>
+    <title>Dashboard - UmrahFlex CRM</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <style>
-        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 50; }
-        .modal.active { display: flex; align-items: center; justify-content: center; }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        .stat-card {
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
     </style>
 </head>
-<body>
-    <div id="root"></div>
-    
-    <script type="text/babel">
-        const { useState } = React;
-        
-        const API_URL = 'https://api.umrahflex.com';
-        
-        const Icons = {
-            TrendingUp: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" /></svg>,
-            Users: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg>,
-            Phone: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" /></svg>,
-            CheckCircle: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>,
-            Clock: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>,
-            DollarSign: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>,
-            Plus: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>,
-            Edit: () => <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>,
-            Trash: () => <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>,
-            Eye: () => <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>,
-        };
+<body class="bg-gray-50">
+    <!-- Navigation -->
+    <nav class="bg-white shadow-lg sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center space-x-4">
+                    <a href="index.html" class="flex items-center">
+                        <i class="fas fa-kaaba text-2xl text-purple-600 mr-2"></i>
+                        <span class="text-xl font-bold text-gray-800">UmrahFlex CRM</span>
+                    </a>
+                    <span class="text-gray-300">|</span>
+                    <span class="text-gray-600 font-medium">Dashboard</span>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <button onclick="refreshDashboard()" class="text-gray-600 hover:text-purple-600 transition">
+                        <i class="fas fa-sync-alt mr-1"></i> Refresh
+                    </button>
+                    <a href="packages.html" class="text-gray-600 hover:text-purple-600 transition">
+                        <i class="fas fa-box-open mr-1"></i> Packages
+                    </a>
+                    <a href="inbox.html" class="text-gray-600 hover:text-purple-600 transition">
+                        <i class="fas fa-inbox mr-1"></i> Inbox
+                    </a>
+                    <a href="index.html" class="text-gray-600 hover:text-purple-600 transition">
+                        <i class="fas fa-home mr-1"></i> Home
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
 
-        const formatCurrency = (amount) => `PKR ${amount.toLocaleString()}`;
-        const getLeadAge = (created_at) => {
-            const now = new Date();
-            const created = new Date(created_at);
-            const hours = Math.floor((now - created) / (1000 * 60 * 60));
-            if (hours < 1) return 'Just now';
-            if (hours < 24) return `${hours}h ago`;
-            const days = Math.floor(hours / 24);
-            return `${days}d ago`;
-        };
-        const getConversionRate = (deals, total) => {
-            if (total === 0) return 0;
-            return ((deals / total) * 100).toFixed(1);
-        };
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Header -->
+        <div class="mb-8">
+            <h1 class="text-3xl font-bold text-gray-900">📊 Dashboard Overview</h1>
+            <p class="text-gray-600 mt-1">Real-time business intelligence and analytics</p>
+        </div>
 
-        function AdminPanel() {
-            const [activeTab, setActiveTab] = useState('dashboard');
-            const [userRole, setUserRole] = useState('admin');
-            
-            // Modal states
-            const [officeModalOpen, setOfficeModalOpen] = useState(false);
-            const [teamModalOpen, setTeamModalOpen] = useState(false);
-            const [editingOffice, setEditingOffice] = useState(null);
-            const [editingTeam, setEditingTeam] = useState(null);
-
-            // Initial data
-            const [offices, setOffices] = useState([
-                { office_id: 1, office_name: 'Head Office Karachi', office_city: 'Karachi', office_address: 'Shahrah-e-Faisal', office_phone: '+92-21-1234567', office_email: 'karachi@umrah.com', manager_name: 'Bilal Khan', status: 'active', teams: 8, leads: 425, deals: 156 },
-                { office_id: 2, office_name: 'Lahore Branch', office_city: 'Lahore', office_address: 'MM Alam Road', office_phone: '+92-42-7654321', office_email: 'lahore@umrah.com', manager_name: 'Ahmed Ali', status: 'active', teams: 5, leads: 268, deals: 87 },
-                { office_id: 3, office_name: 'Islamabad Branch', office_city: 'Islamabad', office_address: 'Blue Area', office_phone: '+92-51-9876543', office_email: 'islamabad@umrah.com', manager_name: 'Usman Shah', status: 'active', teams: 4, leads: 154, deals: 41 }
-            ]);
-
-            const [teams, setTeams] = useState([
-                { user_id: 1, name: 'Ahmed Khan', email: 'ahmed@umrah.com', phone: '+92-300-1234567', role: 'manager', office_id: 1, office_name: 'Head Office Karachi', daily_leads_limit: 20, assigned_leads_count: 23, converted_deals_count: 34, total_revenue: 12500000, is_active: true, created_at: '2024-01-15' },
-                { user_id: 2, name: 'Fatima Ali', email: 'fatima@umrah.com', phone: '+92-321-9876543', role: 'sales', office_id: 1, office_name: 'Head Office Karachi', daily_leads_limit: 15, assigned_leads_count: 19, converted_deals_count: 31, total_revenue: 9800000, is_active: true, created_at: '2024-02-10' },
-                { user_id: 3, name: 'Usman Malik', email: 'usman@umrah.com', phone: '+92-333-4567890', role: 'sales', office_id: 2, office_name: 'Lahore Branch', daily_leads_limit: 10, assigned_leads_count: 15, converted_deals_count: 23, total_revenue: 7200000, is_active: true, created_at: '2024-03-05' }
-            ]);
-
-            const leads = [
-                { lead_id: 123, wa_number: '+92-300-1234567', customer_name: 'Ali Ahmed', email: 'ali@email.com', city: 'Karachi', assigned_to: 1, assigned_to_name: 'Ahmed Khan', assigned_office: 1, office_name: 'Karachi', departure_airport: 'Karachi', preferred_month: 'Ramadan', duration_days: 15, number_of_persons: 4, budget_per_person: 180000, status: 'contacted', priority: 'high', source: 'whatsapp', created_at: '2025-01-12T10:30:00', last_contact_date: '2025-01-12T14:20:00', notes: 'Interested in Ramadan package' },
-                { lead_id: 124, wa_number: '+92-321-7654321', customer_name: 'Sara Khan', email: 'sara@email.com', city: 'Lahore', assigned_to: 2, assigned_to_name: 'Fatima Ali', assigned_office: 1, office_name: 'Karachi', departure_airport: 'Lahore', preferred_month: 'Shawwal', duration_days: 10, number_of_persons: 6, budget_per_person: 220000, status: 'follow_up', priority: 'medium', source: 'whatsapp', created_at: '2025-01-11T15:45:00', last_contact_date: '2025-01-12T09:15:00', notes: 'Call back tomorrow' },
-                { lead_id: 125, wa_number: '+92-333-9876543', customer_name: 'Hassan Malik', email: 'hassan@email.com', city: 'Islamabad', assigned_to: 3, assigned_to_name: 'Usman Malik', assigned_office: 2, office_name: 'Lahore', departure_airport: 'Islamabad', preferred_month: 'Dhul-Hijjah', duration_days: 20, number_of_persons: 2, budget_per_person: 450000, status: 'deal_done', priority: 'urgent', source: 'website', created_at: '2025-01-10T08:20:00', last_contact_date: '2025-01-11T16:30:00', notes: 'Payment received' }
-            ];
-
-            // Office Management Functions
-            const openAddOfficeModal = () => {
-                setEditingOffice(null);
-                setOfficeModalOpen(true);
-            };
-
-            const openEditOfficeModal = (office) => {
-                setEditingOffice(office);
-                setOfficeModalOpen(true);
-            };
-
-            const handleSaveOffice = (e) => {
-                e.preventDefault();
-                const formData = new FormData(e.target);
-                const officeData = {
-                    office_name: formData.get('office_name'),
-                    office_city: formData.get('office_city'),
-                    office_address: formData.get('office_address'),
-                    office_phone: formData.get('office_phone'),
-                    office_email: formData.get('office_email'),
-                    manager_name: formData.get('manager_name'),
-                    status: formData.get('status')
-                };
-
-                if (editingOffice) {
-                    // Update existing
-                    setOffices(offices.map(o => 
-                        o.office_id === editingOffice.office_id 
-                            ? { ...o, ...officeData }
-                            : o
-                    ));
-                    alert('✅ Office updated successfully!');
-                } else {
-                    // Add new
-                    const newOffice = {
-                        ...officeData,
-                        office_id: Math.max(...offices.map(o => o.office_id)) + 1,
-                        teams: 0,
-                        leads: 0,
-                        deals: 0
-                    };
-                    setOffices([...offices, newOffice]);
-                    alert('✅ Office added successfully!');
-                }
-                
-                setOfficeModalOpen(false);
-            };
-
-            const handleDeleteOffice = (officeId) => {
-                if (confirm('Are you sure you want to delete this office? All associated teams will be unassigned.')) {
-                    setOffices(offices.filter(o => o.office_id !== officeId));
-                    alert('✅ Office deleted successfully!');
-                }
-            };
-
-            // Team Management Functions
-            const openAddTeamModal = () => {
-                setEditingTeam(null);
-                setTeamModalOpen(true);
-            };
-
-            const openEditTeamModal = (team) => {
-                setEditingTeam(team);
-                setTeamModalOpen(true);
-            };
-
-            const handleSaveTeam = (e) => {
-                e.preventDefault();
-                const formData = new FormData(e.target);
-                const teamData = {
-                    name: formData.get('name'),
-                    email: formData.get('email'),
-                    phone: formData.get('phone'),
-                    role: formData.get('role'),
-                    office_id: parseInt(formData.get('office_id')),
-                    office_name: offices.find(o => o.office_id === parseInt(formData.get('office_id')))?.office_name || '',
-                    daily_leads_limit: parseInt(formData.get('daily_leads_limit')),
-                    is_active: formData.get('is_active') === 'true'
-                };
-
-                if (editingTeam) {
-                    // Update existing
-                    setTeams(teams.map(t => 
-                        t.user_id === editingTeam.user_id 
-                            ? { ...t, ...teamData }
-                            : t
-                    ));
-                    alert('✅ Team member updated successfully!');
-                } else {
-                    // Add new
-                    const newTeam = {
-                        ...teamData,
-                        user_id: Math.max(...teams.map(t => t.user_id)) + 1,
-                        assigned_leads_count: 0,
-                        converted_deals_count: 0,
-                        total_revenue: 0,
-                        created_at: new Date().toISOString().split('T')[0]
-                    };
-                    setTeams([...teams, newTeam]);
-                    alert('✅ Team member added successfully!');
-                }
-                
-                setTeamModalOpen(false);
-            };
-
-            const handleDeleteTeam = (userId) => {
-                if (confirm('Are you sure you want to delete this team member? All assigned leads will be unassigned.')) {
-                    setTeams(teams.filter(t => t.user_id !== userId));
-                    alert('✅ Team member deleted successfully!');
-                }
-            };
-
-            const StatCard = ({ title, value, subtitle, Icon, color, trend }) => (
-                <div className="bg-white rounded-xl shadow-lg p-6 border-l-4" style={{ borderColor: color }}>
-                    <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                            <p className="text-gray-500 text-sm font-medium mb-1">{title}</p>
-                            <h3 className="text-3xl font-bold text-gray-900 mb-1">{value}</h3>
-                            <p className="text-sm text-gray-600">{subtitle}</p>
-                            {trend && (
-                                <div className="flex items-center gap-1 mt-2">
-                                    <Icons.TrendingUp />
-                                    <span className="text-sm text-green-600 font-semibold">{trend}</span>
-                                </div>
-                            )}
-                        </div>
-                        <div className="p-3 rounded-full" style={{ backgroundColor: `${color}20` }}>
-                            <Icon />
-                        </div>
+        <!-- Main Statistics Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <!-- Total Packages -->
+            <div class="stat-card bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl shadow-lg p-6 text-white">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-blue-100 text-sm font-medium uppercase">Total Packages</p>
+                        <p id="statTotalPackages" class="text-4xl font-bold mt-2">--</p>
+                        <p class="text-blue-100 text-sm mt-2">
+                            <span id="statActivePackages" class="font-semibold">--</span> Active
+                        </p>
+                    </div>
+                    <div class="bg-white bg-opacity-20 rounded-full p-4">
+                        <i class="fas fa-box-open text-4xl"></i>
                     </div>
                 </div>
-            );
+            </div>
 
-            const getStatusBadge = (status) => {
-                const styles = {
-                    new: 'bg-blue-100 text-blue-700',
-                    contacted: 'bg-yellow-100 text-yellow-700',
-                    negotiating: 'bg-purple-100 text-purple-700',
-                    deal_done: 'bg-green-100 text-green-700',
-                    follow_up: 'bg-orange-100 text-orange-700',
-                    lost: 'bg-red-100 text-red-700',
-                    cancelled: 'bg-gray-100 text-gray-700'
-                };
-                return <span className={`px-3 py-1 rounded-full text-xs font-semibold ${styles[status] || 'bg-gray-100 text-gray-700'}`}>{status.replace('_', ' ')}</span>;
-            };
-
-            const getPriorityBadge = (priority) => {
-                const styles = {
-                    urgent: 'bg-red-100 text-red-700',
-                    high: 'bg-orange-100 text-orange-700',
-                    medium: 'bg-blue-100 text-blue-700',
-                    low: 'bg-gray-100 text-gray-700'
-                };
-                return <span className={`px-2 py-1 rounded text-xs font-semibold ${styles[priority]}`}>{priority.toUpperCase()}</span>;
-            };
-
-            const getRoleBadge = (role) => {
-                const styles = {
-                    admin: 'bg-purple-100 text-purple-700',
-                    manager: 'bg-blue-100 text-blue-700',
-                    sales: 'bg-green-100 text-green-700',
-                    support: 'bg-yellow-100 text-yellow-700'
-                };
-                return <span className={`px-2 py-1 rounded text-xs font-semibold ${styles[role]}`}>{role.toUpperCase()}</span>;
-            };
-
-            return (
-                <div className="min-h-screen bg-gray-50">
-                    {/* Header */}
-                    <div className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white shadow-xl">
-                        <div className="max-w-7xl mx-auto px-6 py-8">
-                            <div className="flex items-center justify-between">
-                                <div>
-                                    <h1 className="text-3xl font-bold mb-2">🕋 Umrah Admin Panel</h1>
-                                    <p className="text-blue-100">Complete Management System</p>
-                                </div>
-                                <div className="flex items-center gap-4">
-                                    <select 
-                                        value={userRole}
-                                        onChange={(e) => setUserRole(e.target.value)}
-                                        className="px-4 py-2 rounded-lg bg-white/20 backdrop-blur border border-white/30 text-white font-semibold"
-                                    >
-                                        <option value="admin">Admin</option>
-                                        <option value="manager">Manager</option>
-                                        <option value="sales">Sales Team</option>
-                                    </select>
-                                </div>
-                            </div>
-                        </div>
+            <!-- Total Leads -->
+            <div class="stat-card bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl shadow-lg p-6 text-white">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-purple-100 text-sm font-medium uppercase">Total Leads</p>
+                        <p id="statTotalLeads" class="text-4xl font-bold mt-2">--</p>
+                        <p class="text-purple-100 text-sm mt-2">
+                            <span id="statNewLeads" class="font-semibold">--</span> New
+                        </p>
                     </div>
-
-                    {/* Navigation Tabs */}
-                    <div className="bg-white shadow-md">
-                        <div className="max-w-7xl mx-auto px-6">
-                            <div className="flex space-x-8">
-                                {['dashboard', 'offices', 'teams', 'leads', 'reports'].map((tab) => (
-                                    <button
-                                        key={tab}
-                                        onClick={() => setActiveTab(tab)}
-                                        className={`py-4 px-2 border-b-2 font-semibold transition ${
-                                            activeTab === tab
-                                                ? 'border-blue-600 text-blue-600'
-                                                : 'border-transparent text-gray-600 hover:text-blue-600'
-                                        }`}
-                                    >
-                                        {tab.charAt(0).toUpperCase() + tab.slice(1)}
-                                    </button>
-                                ))}
-                            </div>
-                        </div>
+                    <div class="bg-white bg-opacity-20 rounded-full p-4">
+                        <i class="fas fa-users text-4xl"></i>
                     </div>
-
-                    {/* Main Content */}
-                    <div className="max-w-7xl mx-auto px-6 py-8">
-                        {/* Dashboard Tab */}
-                        {activeTab === 'dashboard' && (
-                            <div>
-                                <h2 className="text-2xl font-bold text-gray-800 mb-6">Dashboard Overview</h2>
-                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                                    <StatCard title="Total Leads" value="847" subtitle="This month" Icon={Icons.Users} color="#3B82F6" trend="+12.5%" />
-                                    <StatCard title="Deals Closed" value="284" subtitle="Conversion: 33.5%" Icon={Icons.CheckCircle} color="#10B981" trend="+8.2%" />
-                                    <StatCard title="Total Revenue" value="PKR 85M" subtitle="This month" Icon={Icons.DollarSign} color="#8B5CF6" trend="+15.3%" />
-                                    <StatCard title="Active Team" value="17" subtitle="Sales members" Icon={Icons.Users} color="#F59E0B" />
-                                </div>
-                            </div>
-                        )}
-
-                        {/* Offices Tab */}
-                        {activeTab === 'offices' && (
-                            <div>
-                                <div className="flex justify-between items-center mb-6">
-                                    <h2 className="text-2xl font-bold text-gray-800">Office Management</h2>
-                                    <button 
-                                        onClick={openAddOfficeModal}
-                                        className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-semibold flex items-center gap-2 transition"
-                                    >
-                                        <Icons.Plus /> Add Office
-                                    </button>
-                                </div>
-                                <div className="grid gap-6">
-                                    {offices.map(office => (
-                                        <div key={office.office_id} className="bg-white rounded-xl shadow-lg p-6">
-                                            <div className="flex items-start justify-between">
-                                                <div className="flex-1">
-                                                    <h3 className="text-xl font-bold text-gray-800 mb-1">{office.office_name}</h3>
-                                                    <p className="text-gray-600 mb-2">{office.office_address}, {office.office_city}</p>
-                                                    <div className="grid grid-cols-2 gap-4 text-sm mb-3">
-                                                        <div><span className="text-gray-500">📞 Phone:</span> <span className="ml-2">{office.office_phone}</span></div>
-                                                        <div><span className="text-gray-500">📧 Email:</span> <span className="ml-2">{office.office_email}</span></div>
-                                                        <div><span className="text-gray-500">👤 Manager:</span> <span className="ml-2 font-semibold">{office.manager_name}</span></div>
-                                                        <div><span className="text-gray-500">Status:</span> 
-                                                            <span className={`ml-2 px-2 py-1 rounded text-xs font-semibold ${office.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
-                                                                {office.status}
-                                                            </span>
-                                                        </div>
-                                                    </div>
-                                                    <div className="flex gap-6 text-sm">
-                                                        <div><span className="text-gray-500">Teams:</span> <span className="ml-2 font-semibold text-blue-600">{office.teams}</span></div>
-                                                        <div><span className="text-gray-500">Leads:</span> <span className="ml-2 font-semibold text-purple-600">{office.leads}</span></div>
-                                                        <div><span className="text-gray-500">Deals:</span> <span className="ml-2 font-semibold text-green-600">{office.deals}</span></div>
-                                                    </div>
-                                                </div>
-                                                <div className="flex gap-2">
-                                                    <button 
-                                                        onClick={() => openEditOfficeModal(office)}
-                                                        className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition"
-                                                        title="Edit Office"
-                                                    >
-                                                        <Icons.Edit />
-                                                    </button>
-                                                    <button 
-                                                        onClick={() => handleDeleteOffice(office.office_id)}
-                                                        className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition"
-                                                        title="Delete Office"
-                                                    >
-                                                        <Icons.Trash />
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        )}
-
-                        {/* Teams Tab */}
-                        {activeTab === 'teams' && (
-                            <div>
-                                <div className="flex justify-between items-center mb-6">
-                                    <h2 className="text-2xl font-bold text-gray-800">Team Management</h2>
-                                    <button 
-                                        onClick={openAddTeamModal}
-                                        className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg font-semibold flex items-center gap-2 transition"
-                                    >
-                                        <Icons.Plus /> Add Team Member
-                                    </button>
-                                </div>
-                                <div className="bg-white rounded-xl shadow-lg overflow-hidden">
-                                    <div className="overflow-x-auto">
-                                        <table className="w-full">
-                                            <thead className="bg-gray-100 border-b">
-                                                <tr>
-                                                    <th className="text-left p-4 font-semibold text-gray-700">Name</th>
-                                                    <th className="text-left p-4 font-semibold text-gray-700">Role</th>
-                                                    <th className="text-left p-4 font-semibold text-gray-700">Office</th>
-                                                    <th className="text-left p-4 font-semibold text-gray-700">Phone</th>
-                                                    <th className="text-center p-4 font-semibold text-gray-700">Daily Limit</th>
-                                                    <th className="text-center p-4 font-semibold text-gray-700">Assigned</th>
-                                                    <th className="text-center p-4 font-semibold text-gray-700">Deals</th>
-                                                    <th className="text-center p-4 font-semibold text-gray-700">Conversion</th>
-                                                    <th className="text-center p-4 font-semibold text-gray-700">Revenue</th>
-                                                    <th className="text-center p-4 font-semibold text-gray-700">Status</th>
-                                                    <th className="text-center p-4 font-semibold text-gray-700">Actions</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                {teams.map(team => (
-                                                    <tr key={team.user_id} className="border-b hover:bg-gray-50">
-                                                        <td className="p-4">
-                                                            <p className="font-semibold text-gray-800">{team.name}</p>
-                                                            <p className="text-xs text-gray-500">{team.email}</p>
-                                                        </td>
-                                                        <td className="p-4">{getRoleBadge(team.role)}</td>
-                                                        <td className="p-4 text-gray-600">{team.office_name}</td>
-                                                        <td className="p-4 text-gray-600">{team.phone}</td>
-                                                        <td className="p-4 text-center">
-                                                            <span className="px-3 py-1 rounded-full bg-purple-100 text-purple-700 font-semibold text-sm">
-                                                                {team.assigned_leads_count % team.daily_leads_limit}/{team.daily_leads_limit}
-                                                            </span>
-                                                        </td>
-                                                        <td className="p-4 text-center">
-                                                            <span className="px-3 py-1 rounded-full bg-blue-100 text-blue-700 font-semibold text-sm">
-                                                                {team.assigned_leads_count}
-                                                            </span>
-                                                        </td>
-                                                        <td className="p-4 text-center">
-                                                            <span className="px-3 py-1 rounded-full bg-green-100 text-green-700 font-semibold text-sm">
-                                                                {team.converted_deals_count}
-                                                            </span>
-                                                        </td>
-                                                        <td className="p-4 text-center">
-                                                            <span className={`px-3 py-1 rounded-full font-semibold text-sm ${
-                                                                getConversionRate(team.converted_deals_count, team.assigned_leads_count) >= 35 ? 'bg-green-100 text-green-700' :
-                                                                getConversionRate(team.converted_deals_count, team.assigned_leads_count) >= 30 ? 'bg-yellow-100 text-yellow-700' :
-                                                                'bg-red-100 text-red-700'
-                                                            }`}>
-                                                                {getConversionRate(team.converted_deals_count, team.assigned_leads_count)}%
-                                                            </span>
-                                                        </td>
-                                                        <td className="p-4 text-center text-sm font-semibold text-gray-700">
-                                                            {formatCurrency(team.total_revenue)}
-                                                        </td>
-                                                        <td className="p-4 text-center">
-                                                            <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                                                                team.is_active ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
-                                                            }`}>
-                                                                {team.is_active ? 'Active' : 'Inactive'}
-                                                            </span>
-                                                        </td>
-                                                        <td className="p-4 text-center">
-                                                            <div className="flex gap-2 justify-center">
-                                                                <button 
-                                                                    onClick={() => openEditTeamModal(team)}
-                                                                    className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition"
-                                                                    title="Edit"
-                                                                >
-                                                                    <Icons.Edit />
-                                                                </button>
-                                                                <button 
-                                                                    onClick={() => handleDeleteTeam(team.user_id)}
-                                                                    className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition"
-                                                                    title="Delete"
-                                                                >
-                                                                    <Icons.Trash />
-                                                                </button>
-                                                            </div>
-                                                        </td>
-                                                    </tr>
-                                                ))}
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                </div>
-                            </div>
-                        )}
-
-                        {/* Leads Tab */}
-                        {activeTab === 'leads' && (
-                            <div>
-                                <h2 className="text-2xl font-bold text-gray-800 mb-6">Lead Management</h2>
-                                <div className="bg-white rounded-xl shadow-lg overflow-hidden">
-                                    <div className="overflow-x-auto">
-                                        <table className="w-full">
-                                            <thead className="bg-gray-100 border-b">
-                                                <tr>
-                                                    <th className="text-left p-4 font-semibold text-gray-700">Lead ID</th>
-                                                    <th className="text-left p-4 font-semibold text-gray-700">Customer</th>
-                                                    <th className="text-left p-4 font-semibold text-gray-700">WhatsApp</th>
-                                                    <th className="text-left p-4 font-semibold text-gray-700">Assigned To</th>
-                                                    <th className="text-left p-4 font-semibold text-gray-700">Requirements</th>
-                                                    <th className="text-center p-4 font-semibold text-gray-700">Priority</th>
-                                                    <th className="text-center p-4 font-semibold text-gray-700">Age</th>
-                                                    <th className="text-center p-4 font-semibold text-gray-700">Status</th>
-                                                    <th className="text-center p-4 font-semibold text-gray-700">Actions</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                {leads.map(lead => (
-                                                    <tr key={lead.lead_id} className="border-b hover:bg-gray-50">
-                                                        <td className="p-4 font-semibold text-gray-800">#{lead.lead_id}</td>
-                                                        <td className="p-4">
-                                                            <p className="font-semibold text-gray-800">{lead.customer_name}</p>
-                                                            <p className="text-xs text-gray-500">
-                                                                {lead.source === 'whatsapp' && '💬 WhatsApp'}
-                                                                {lead.source === 'website' && '🌐 Website'}
-                                                                {lead.source === 'referral' && '👥 Referral'}
-                                                            </p>
-                                                        </td>
-                                                        <td className="p-4 text-gray-600">{lead.wa_number}</td>
-                                                        <td className="p-4 text-gray-600">{lead.assigned_to_name}</td>
-                                                        <td className="p-4">
-                                                            <div className="text-xs text-gray-600 space-y-1">
-                                                                <p>✈️ {lead.departure_airport} • {lead.duration_days} days</p>
-                                                                <p>📅 {lead.preferred_month}</p>
-                                                                <p>👥 {lead.number_of_persons} persons</p>
-                                                                <p>💰 {formatCurrency(lead.budget_per_person)}/person</p>
-                                                            </div>
-                                                        </td>
-                                                        <td className="p-4 text-center">{getPriorityBadge(lead.priority)}</td>
-                                                        <td className="p-4 text-center">
-                                                            <div className="text-xs">
-                                                                <p className="font-semibold text-gray-700">{getLeadAge(lead.created_at)}</p>
-                                                                {lead.last_contact_date && (
-                                                                    <p className="text-gray-500 mt-1">Last: {getLeadAge(lead.last_contact_date)}</p>
-                                                                )}
-                                                            </div>
-                                                        </td>
-                                                        <td className="p-4 text-center">{getStatusBadge(lead.status)}</td>
-                                                        <td className="p-4 text-center">
-                                                            <button className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg">
-                                                                <Icons.Eye />
-                                                            </button>
-                                                        </td>
-                                                    </tr>
-                                                ))}
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                </div>
-                            </div>
-                        )}
-
-                        {/* Reports Tab */}
-                        {activeTab === 'reports' && (
-                            <div>
-                                <h2 className="text-2xl font-bold text-gray-800 mb-6">Reports & Analytics</h2>
-                                <div className="bg-white rounded-xl shadow-lg p-6">
-                                    <p className="text-gray-600 text-center py-12">Detailed reports and analytics coming soon...</p>
-                                </div>
-                            </div>
-                        )}
-                    </div>
-
-                    {/* Office Modal */}
-                    {officeModalOpen && (
-                        <div className="modal active" onClick={() => setOfficeModalOpen(false)}>
-                            <div className="bg-white rounded-2xl max-w-2xl w-full mx-4" onClick={(e) => e.stopPropagation()}>
-                                <div className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-6 py-4 rounded-t-2xl">
-                                    <h2 className="text-xl font-bold">{editingOffice ? 'Edit Office' : 'Add New Office'}</h2>
-                                </div>
-                                <form onSubmit={handleSaveOffice} className="p-6">
-                                    <div className="grid grid-cols-2 gap-4 mb-4">
-                                        <div className="col-span-2">
-                                            <label className="block text-sm font-medium text-gray-700 mb-1">Office Name *</label>
-                                            <input type="text" name="office_name" required defaultValue={editingOffice?.office_name}
-                                                   className="w-full border border-gray-300 rounded-lg px-3 py-2" />
-                                        </div>
-                                        <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-1">City *</label>
-                                            <select name="office_city" required defaultValue={editingOffice?.office_city}
-                                                    className="w-full border border-gray-300 rounded-lg px-3 py-2">
-                                                <option value="">Select City</option>
-                                                <option value="Karachi">Karachi</option>
-                                                <option value="Lahore">Lahore</option>
-                                                <option value="Islamabad">Islamabad</option>
-                                                <option value="Faisalabad">Faisalabad</option>
-                                                <option value="Multan">Multan</option>
-                                            </select>
-                                        </div>
-                                        <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-1">Manager Name *</label>
-                                            <input type="text" name="manager_name" required defaultValue={editingOffice?.manager_name}
-                                                   className="w-full border border-gray-300 rounded-lg px-3 py-2" />
-                                        </div>
-                                        <div className="col-span-2">
-                                            <label className="block text-sm font-medium text-gray-700 mb-1">Address *</label>
-                                            <input type="text" name="office_address" required defaultValue={editingOffice?.office_address}
-                                                   className="w-full border border-gray-300 rounded-lg px-3 py-2" />
-                                        </div>
-                                        <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-1">Phone *</label>
-                                            <input type="text" name="office_phone" required defaultValue={editingOffice?.office_phone}
-                                                   className="w-full border border-gray-300 rounded-lg px-3 py-2" 
-                                                   placeholder="+92-XX-XXXXXXX or 042XXXXXXX" />
-                                            <p className="text-xs text-gray-500 mt-1">Auto-formats: +92-335-8311116 or +92-42-7654321</p>
-                                        </div>
-                                        <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-1">Email *</label>
-                                            <input type="email" name="office_email" required defaultValue={editingOffice?.office_email}
-                                                   className="w-full border border-gray-300 rounded-lg px-3 py-2" />
-                                        </div>
-                                        <div className="col-span-2">
-                                            <label className="block text-sm font-medium text-gray-700 mb-2">Status *</label>
-                                            <div className="flex gap-4">
-                                                <label className="flex items-center">
-                                                    <input type="radio" name="status" value="active" 
-                                                           defaultChecked={!editingOffice || editingOffice.status === 'active'}
-                                                           className="mr-2" />
-                                                    <span>Active</span>
-                                                </label>
-                                                <label className="flex items-center">
-                                                    <input type="radio" name="status" value="inactive" 
-                                                           defaultChecked={editingOffice?.status === 'inactive'}
-                                                           className="mr-2" />
-                                                    <span>Inactive</span>
-                                                </label>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div className="flex justify-end gap-3 pt-4 border-t">
-                                        <button type="button" onClick={() => setOfficeModalOpen(false)}
-                                                className="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
-                                            Cancel
-                                        </button>
-                                        <button type="submit"
-                                                className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold">
-                                            {editingOffice ? 'Update Office' : 'Add Office'}
-                                        </button>
-                                    </div>
-                                </form>
-                            </div>
-                        </div>
-                    )}
-
-                    {/* Team Modal */}
-                    {teamModalOpen && (
-                        <div className="modal active" onClick={() => setTeamModalOpen(false)}>
-                            <div className="bg-white rounded-2xl max-w-2xl w-full mx-4" onClick={(e) => e.stopPropagation()}>
-                                <div className="bg-gradient-to-r from-green-600 to-emerald-600 text-white px-6 py-4 rounded-t-2xl">
-                                    <h2 className="text-xl font-bold">{editingTeam ? 'Edit Team Member' : 'Add New Team Member'}</h2>
-                                </div>
-                                <form onSubmit={handleSaveTeam} className="p-6">
-                                    <div className="grid grid-cols-2 gap-4 mb-4">
-                                        <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-1">Full Name *</label>
-                                            <input type="text" name="name" required defaultValue={editingTeam?.name}
-                                                   className="w-full border border-gray-300 rounded-lg px-3 py-2" />
-                                        </div>
-                                        <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-1">Email *</label>
-                                            <input type="email" name="email" required defaultValue={editingTeam?.email}
-                                                   className="w-full border border-gray-300 rounded-lg px-3 py-2" />
-                                        </div>
-                                        <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-1">Phone / WhatsApp *</label>
-                                            <input type="text" name="phone" required defaultValue={editingTeam?.phone}
-                                                   className="w-full border border-gray-300 rounded-lg px-3 py-2" 
-                                                   placeholder="+92-3XX-XXXXXXX or 03XXXXXXXXX" />
-                                            <p className="text-xs text-gray-500 mt-1">Auto-formats to: +92-335-8311116</p>
-                                        </div>
-                                        <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-1">Role *</label>
-                                            <select name="role" required defaultValue={editingTeam?.role}
-                                                    className="w-full border border-gray-300 rounded-lg px-3 py-2">
-                                                <option value="">Select Role</option>
-                                                <option value="admin">Admin</option>
-                                                <option value="manager">Manager</option>
-                                                <option value="sales">Sales</option>
-                                                <option value="support">Support</option>
-                                            </select>
-                                        </div>
-                                        <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-1">Office *</label>
-                                            <select name="office_id" required defaultValue={editingTeam?.office_id}
-                                                    className="w-full border border-gray-300 rounded-lg px-3 py-2">
-                                                <option value="">Select Office</option>
-                                                {offices.map(office => (
-                                                    <option key={office.office_id} value={office.office_id}>
-                                                        {office.office_name}
-                                                    </option>
-                                                ))}
-                                            </select>
-                                        </div>
-                                        <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-1">Daily Leads Limit *</label>
-                                            <input type="number" name="daily_leads_limit" required min="1" max="100"
-                                                   defaultValue={editingTeam?.daily_leads_limit || 10}
-                                                   className="w-full border border-gray-300 rounded-lg px-3 py-2" />
-                                        </div>
-                                        <div className="col-span-2">
-                                            <label className="block text-sm font-medium text-gray-700 mb-2">Status *</label>
-                                            <div className="flex gap-4">
-                                                <label className="flex items-center">
-                                                    <input type="radio" name="is_active" value="true" 
-                                                           defaultChecked={!editingTeam || editingTeam.is_active}
-                                                           className="mr-2" />
-                                                    <span>Active</span>
-                                                </label>
-                                                <label className="flex items-center">
-                                                    <input type="radio" name="is_active" value="false" 
-                                                           defaultChecked={editingTeam && !editingTeam.is_active}
-                                                           className="mr-2" />
-                                                    <span>Inactive</span>
-                                                </label>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div className="flex justify-end gap-3 pt-4 border-t">
-                                        <button type="button" onClick={() => setTeamModalOpen(false)}
-                                                className="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
-                                            Cancel
-                                        </button>
-                                        <button type="submit"
-                                                className="px-6 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold">
-                                            {editingTeam ? 'Update Member' : 'Add Member'}
-                                        </button>
-                                    </div>
-                                </form>
-                            </div>
-                        </div>
-                    )}
                 </div>
-            );
+            </div>
+
+            <!-- Conversion Rate -->
+            <div class="stat-card bg-gradient-to-br from-green-500 to-green-600 rounded-xl shadow-lg p-6 text-white">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-green-100 text-sm font-medium uppercase">Converted</p>
+                        <p id="statConvertedLeads" class="text-4xl font-bold mt-2">--</p>
+                        <p class="text-green-100 text-sm mt-2">
+                            <span id="statConversionRate" class="font-semibold">--</span>% Rate
+                        </p>
+                    </div>
+                    <div class="bg-white bg-opacity-20 rounded-full p-4">
+                        <i class="fas fa-trophy text-4xl"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Team Size -->
+            <div class="stat-card bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl shadow-lg p-6 text-white">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-orange-100 text-sm font-medium uppercase">Team Members</p>
+                        <p id="statTotalTeam" class="text-4xl font-bold mt-2">--</p>
+                        <p class="text-orange-100 text-sm mt-2">
+                            <span id="statTotalOffices" class="font-semibold">--</span> Offices
+                        </p>
+                    </div>
+                    <div class="bg-white bg-opacity-20 rounded-full p-4">
+                        <i class="fas fa-user-tie text-4xl"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Secondary Stats -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+            <div class="bg-white rounded-lg shadow p-4">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm text-gray-500">Qualified</p>
+                        <p id="statQualified" class="text-2xl font-bold text-green-600">--</p>
+                    </div>
+                    <i class="fas fa-check-circle text-2xl text-green-500"></i>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-lg shadow p-4">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm text-gray-500">Contacted</p>
+                        <p id="statContacted" class="text-2xl font-bold text-yellow-600">--</p>
+                    </div>
+                    <i class="fas fa-phone text-2xl text-yellow-500"></i>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-lg shadow p-4">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm text-gray-500">High Priority</p>
+                        <p id="statHighPriority" class="text-2xl font-bold text-red-600">--</p>
+                    </div>
+                    <i class="fas fa-exclamation-circle text-2xl text-red-500"></i>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-lg shadow p-4">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm text-gray-500">Lost</p>
+                        <p id="statLost" class="text-2xl font-bold text-gray-600">--</p>
+                    </div>
+                    <i class="fas fa-times-circle text-2xl text-gray-500"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Charts and Recent Activity -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+            <!-- Lead Status Distribution -->
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <h3 class="text-lg font-bold text-gray-900 mb-4">Lead Status Distribution</h3>
+                <canvas id="leadStatusChart" height="200"></canvas>
+            </div>
+
+            <!-- Package Distribution -->
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <h3 class="text-lg font-bold text-gray-900 mb-4">Packages by Airport</h3>
+                <canvas id="packageChart" height="200"></canvas>
+            </div>
+        </div>
+
+        <!-- Recent Activity -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <!-- Recent Leads -->
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-bold text-gray-900">Recent Leads</h3>
+                    <a href="inbox.html" class="text-purple-600 hover:text-purple-700 text-sm font-medium">
+                        View All →
+                    </a>
+                </div>
+                <div id="recentLeadsList" class="space-y-3">
+                    <!-- Will be populated by JavaScript -->
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <h3 class="text-lg font-bold text-gray-900 mb-4">Quick Actions</h3>
+                <div class="space-y-3">
+                    <a href="packages.html" class="block bg-gradient-to-r from-blue-50 to-blue-100 hover:from-blue-100 hover:to-blue-200 rounded-lg p-4 transition">
+                        <div class="flex items-center">
+                            <div class="bg-blue-500 rounded-lg p-3 mr-4">
+                                <i class="fas fa-plus text-white text-xl"></i>
+                            </div>
+                            <div>
+                                <p class="font-semibold text-gray-900">Add New Package</p>
+                                <p class="text-sm text-gray-600">Create Umrah package</p>
+                            </div>
+                        </div>
+                    </a>
+
+                    <a href="inbox.html" class="block bg-gradient-to-r from-purple-50 to-purple-100 hover:from-purple-100 hover:to-purple-200 rounded-lg p-4 transition">
+                        <div class="flex items-center">
+                            <div class="bg-purple-500 rounded-lg p-3 mr-4">
+                                <i class="fas fa-inbox text-white text-xl"></i>
+                            </div>
+                            <div>
+                                <p class="font-semibold text-gray-900">View Inbox</p>
+                                <p class="text-sm text-gray-600">Manage customer leads</p>
+                            </div>
+                        </div>
+                    </a>
+
+                    <a href="packages.html" class="block bg-gradient-to-r from-green-50 to-green-100 hover:from-green-100 hover:to-green-200 rounded-lg p-4 transition">
+                        <div class="flex items-center">
+                            <div class="bg-green-500 rounded-lg p-3 mr-4">
+                                <i class="fas fa-list text-white text-xl"></i>
+                            </div>
+                            <div>
+                                <p class="font-semibold text-gray-900">All Packages</p>
+                                <p class="text-sm text-gray-600">View and manage packages</p>
+                            </div>
+                        </div>
+                    </a>
+
+                    <button onclick="refreshDashboard()" class="block w-full bg-gradient-to-r from-orange-50 to-orange-100 hover:from-orange-100 hover:to-orange-200 rounded-lg p-4 transition">
+                        <div class="flex items-center">
+                            <div class="bg-orange-500 rounded-lg p-3 mr-4">
+                                <i class="fas fa-sync-alt text-white text-xl"></i>
+                            </div>
+                            <div class="text-left">
+                                <p class="font-semibold text-gray-900">Refresh Dashboard</p>
+                                <p class="text-sm text-gray-600">Update all statistics</p>
+                            </div>
+                        </div>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // =========================
+        // ✅ API CONFIG
+        // =========================
+        const API_URL = 'http://localhost:3000/api';
+
+        async function apiFetch(path, options = {}) {
+            const res = await fetch(`${API_URL}${path}`, {
+                headers: { 'Content-Type': 'application/json', ...(options.headers || {}) },
+                ...options,
+            });
+
+            const text = await res.text();
+            let data;
+            try { data = text ? JSON.parse(text) : null; } catch { data = text; }
+
+            if (!res.ok) throw new Error((data && data.error) ? data.error : (data || `HTTP ${res.status}`));
+            return data;
         }
 
-        const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(<AdminPanel />);
+        // =========================
+        // ✅ STATE
+        // =========================
+        let dashboardData = {
+            packages: [],
+            leads: [],
+            offices: [],
+            teams: []
+        };
 
-        // ✅ Phone Number Auto-Format Function
-        function formatPhoneNumber(value) {
-            if (!value) return value;
-            
-            // Remove all non-digits except +
-            let cleaned = value.replace(/[^\d+]/g, '');
-            
-            // Add +92 if not present
-            if (!cleaned.startsWith('+92')) {
-                if (cleaned.startsWith('0')) {
-                    cleaned = '+92' + cleaned.substring(1);
-                } else if (cleaned.startsWith('92')) {
-                    cleaned = '+' + cleaned;
-                } else {
-                    cleaned = '+92' + cleaned;
-                }
+        let leadStatusChart = null;
+        let packageChart = null;
+
+        // =========================
+        // ✅ LOAD DATA
+        // =========================
+        async function loadDashboardData() {
+            try {
+                // Load all data in parallel
+                const [packages, leads, offices, teams] = await Promise.all([
+                    apiFetch('/packages'),
+                    apiFetch('/leads'),
+                    apiFetch('/offices'),
+                    apiFetch('/teams')
+                ]);
+
+                dashboardData = {
+                    packages: Array.isArray(packages) ? packages : [],
+                    leads: Array.isArray(leads) ? leads : [],
+                    offices: Array.isArray(offices) ? offices : [],
+                    teams: Array.isArray(teams) ? teams : []
+                };
+
+                updateStatistics();
+                updateCharts();
+                updateRecentLeads();
+            } catch (err) {
+                console.error('Failed to load dashboard data:', err);
+                alert('❌ Failed to load dashboard data. Please check your connection.');
             }
-            
-            // Format based on length
-            let digits = cleaned.substring(3); // Remove +92
-            
-            if (digits.length === 10) {
-                // Mobile: +92-3XX-XXXXXXX
-                return `+92-${digits.substring(0,3)}-${digits.substring(3)}`;
-            } else if (digits.length === 9) {
-                // Landline: +92-XX-XXXXXXX
-                return `+92-${digits.substring(0,2)}-${digits.substring(2)}`;
-            }
-            
-            return cleaned;
         }
 
-        // Auto-format phone inputs when they lose focus
-        document.addEventListener('DOMContentLoaded', () => {
-            document.addEventListener('blur', (e) => {
-                if (e.target.name === 'office_phone' || e.target.name === 'phone') {
-                    e.target.value = formatPhoneNumber(e.target.value);
+        // =========================
+        // ✅ UPDATE STATISTICS
+        // =========================
+        function updateStatistics() {
+            const { packages, leads, offices, teams } = dashboardData;
+
+            // Package stats
+            const totalPackages = packages.length;
+            const activePackages = packages.filter(p => p.status === 'Active').length;
+            document.getElementById('statTotalPackages').textContent = totalPackages;
+            document.getElementById('statActivePackages').textContent = activePackages;
+
+            // Lead stats
+            const totalLeads = leads.length;
+            const newLeads = leads.filter(l => l.status === 'new').length;
+            const contactedLeads = leads.filter(l => l.status === 'contacted').length;
+            const qualifiedLeads = leads.filter(l => l.status === 'qualified').length;
+            const convertedLeads = leads.filter(l => l.status === 'converted').length;
+            const lostLeads = leads.filter(l => l.status === 'lost').length;
+            const highPriorityLeads = leads.filter(l => l.priority === 'high').length;
+
+            document.getElementById('statTotalLeads').textContent = totalLeads;
+            document.getElementById('statNewLeads').textContent = newLeads;
+            document.getElementById('statConvertedLeads').textContent = convertedLeads;
+            document.getElementById('statQualified').textContent = qualifiedLeads;
+            document.getElementById('statContacted').textContent = contactedLeads;
+            document.getElementById('statLost').textContent = lostLeads;
+            document.getElementById('statHighPriority').textContent = highPriorityLeads;
+
+            // Conversion rate
+            const conversionRate = totalLeads > 0 ? ((convertedLeads / totalLeads) * 100).toFixed(1) : 0;
+            document.getElementById('statConversionRate').textContent = conversionRate;
+
+            // Team stats
+            document.getElementById('statTotalTeam').textContent = teams.length;
+            document.getElementById('statTotalOffices').textContent = offices.length;
+        }
+
+        // =========================
+        // ✅ UPDATE CHARTS
+        // =========================
+        function updateCharts() {
+            const { packages, leads } = dashboardData;
+
+            // Lead Status Chart
+            const statusCounts = {
+                new: leads.filter(l => l.status === 'new').length,
+                contacted: leads.filter(l => l.status === 'contacted').length,
+                qualified: leads.filter(l => l.status === 'qualified').length,
+                converted: leads.filter(l => l.status === 'converted').length,
+                lost: leads.filter(l => l.status === 'lost').length
+            };
+
+            if (leadStatusChart) leadStatusChart.destroy();
+            
+            const ctx1 = document.getElementById('leadStatusChart');
+            leadStatusChart = new Chart(ctx1, {
+                type: 'doughnut',
+                data: {
+                    labels: ['New', 'Contacted', 'Qualified', 'Converted', 'Lost'],
+                    datasets: [{
+                        data: [
+                            statusCounts.new,
+                            statusCounts.contacted,
+                            statusCounts.qualified,
+                            statusCounts.converted,
+                            statusCounts.lost
+                        ],
+                        backgroundColor: [
+                            '#3b82f6', // blue
+                            '#eab308', // yellow
+                            '#10b981', // green
+                            '#8b5cf6', // purple
+                            '#ef4444'  // red
+                        ],
+                        borderWidth: 2,
+                        borderColor: '#ffffff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
                 }
-            }, true);
-        });
+            });
+
+            // Package by Airport Chart
+            const airportCounts = {};
+            packages.forEach(p => {
+                const airport = p.departure_airport || 'Unknown';
+                airportCounts[airport] = (airportCounts[airport] || 0) + 1;
+            });
+
+            if (packageChart) packageChart.destroy();
+
+            const ctx2 = document.getElementById('packageChart');
+            packageChart = new Chart(ctx2, {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(airportCounts),
+                    datasets: [{
+                        label: 'Packages',
+                        data: Object.values(airportCounts),
+                        backgroundColor: [
+                            '#3b82f6',
+                            '#8b5cf6',
+                            '#10b981',
+                            '#f59e0b',
+                            '#ef4444'
+                        ],
+                        borderRadius: 8
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                stepSize: 1
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // =========================
+        // ✅ UPDATE RECENT LEADS
+        // =========================
+        function updateRecentLeads() {
+            const { leads } = dashboardData;
+            const recentLeads = [...leads]
+                .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+                .slice(0, 5);
+
+            const container = document.getElementById('recentLeadsList');
+
+            if (recentLeads.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-8 text-gray-500">
+                        <i class="fas fa-inbox text-4xl mb-2"></i>
+                        <p>No leads yet</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = recentLeads.map(lead => {
+                const statusColors = {
+                    new: 'bg-blue-100 text-blue-800',
+                    contacted: 'bg-yellow-100 text-yellow-800',
+                    qualified: 'bg-green-100 text-green-800',
+                    converted: 'bg-purple-100 text-purple-800',
+                    lost: 'bg-red-100 text-red-800'
+                };
+
+                const priorityIcons = {
+                    high: '<i class="fas fa-exclamation-circle text-red-500"></i>',
+                    medium: '<i class="fas fa-exclamation-triangle text-orange-500"></i>',
+                    low: '<i class="fas fa-info-circle text-blue-500"></i>'
+                };
+
+                const timeAgo = getTimeAgo(new Date(lead.created_at));
+                const statusClass = statusColors[lead.status] || 'bg-gray-100 text-gray-800';
+
+                return `
+                    <div class="border border-gray-200 rounded-lg p-4 hover:border-purple-300 hover:shadow-md transition">
+                        <div class="flex items-start justify-between">
+                            <div class="flex-1">
+                                <div class="flex items-center space-x-2 mb-1">
+                                    <p class="font-semibold text-gray-900">${lead.customer_name || 'N/A'}</p>
+                                    ${priorityIcons[lead.priority] || ''}
+                                </div>
+                                <p class="text-sm text-gray-600 mb-2">
+                                    ${lead.wa_number ? `<i class="fab fa-whatsapp text-green-600"></i> ${lead.wa_number}` : ''}
+                                </p>
+                                <div class="flex items-center space-x-2">
+                                    <span class="px-2 py-1 rounded-full text-xs font-medium ${statusClass}">
+                                        ${(lead.status || 'new').toUpperCase()}
+                                    </span>
+                                    <span class="text-xs text-gray-500">${timeAgo}</span>
+                                </div>
+                            </div>
+                            <a href="inbox.html" class="text-purple-600 hover:text-purple-700">
+                                <i class="fas fa-arrow-right"></i>
+                            </a>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // =========================
+        // ✅ UTILITY FUNCTIONS
+        // =========================
+        function getTimeAgo(date) {
+            const seconds = Math.floor((new Date() - date) / 1000);
+            
+            if (seconds < 60) return 'Just now';
+            if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`;
+            if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`;
+            if (seconds < 604800) return `${Math.floor(seconds / 86400)}d ago`;
+            return date.toLocaleDateString();
+        }
+
+        function refreshDashboard() {
+            loadDashboardData();
+        }
+
+        // =========================
+        // ✅ INITIALIZE
+        // =========================
+        async function init() {
+            try {
+                await loadDashboardData();
+                console.log('✅ Dashboard loaded successfully');
+            } catch (err) {
+                console.error('❌ Dashboard initialization error:', err);
+            }
+        }
+
+        // Start
+        init();
     </script>
 </body>
 </html>
