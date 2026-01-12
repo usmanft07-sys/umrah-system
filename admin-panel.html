@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard - UmrahFlex CRM</title>
+    <title>Admin Panel - UmrahFlex CRM</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
@@ -12,12 +12,13 @@
         body { font-family: 'Inter', sans-serif; }
         .stat-card { transition: transform 0.2s, box-shadow 0.2s; }
         .stat-card:hover { transform: translateY(-5px); box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
-        
-        /* Sirf ye tabdeeli ki hai: Charts ko control karne ke liye */
-        .chart-wrapper { position: relative; height: 300px; width: 100%; }
+        .nav-link { transition: all 0.2s; }
+        .nav-link:hover { background: rgba(147, 51, 234, 0.1); }
+        .nav-link.active { background: rgba(147, 51, 234, 0.1); border-left: 3px solid #9333ea; }
     </style>
 </head>
 <body class="bg-gray-50">
+    <!-- Top Navigation -->
     <nav class="bg-white shadow-lg sticky top-0 z-50">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between items-center h-16">
@@ -27,215 +28,971 @@
                         <span class="text-xl font-bold text-gray-800">UmrahFlex CRM</span>
                     </a>
                     <span class="text-gray-300">|</span>
-                    <span class="text-gray-600 font-medium">Dashboard</span>
+                    <span class="text-gray-600 font-medium">Admin Panel</span>
                 </div>
                 <div class="flex items-center space-x-4">
                     <button onclick="refreshDashboard()" class="text-gray-600 hover:text-purple-600 transition">
                         <i class="fas fa-sync-alt mr-1"></i> Refresh
                     </button>
-                    <a href="packages.html" class="text-gray-600 hover:text-purple-600 transition"><i class="fas fa-box-open mr-1"></i> Packages</a>
-                    <a href="inbox.html" class="text-gray-600 hover:text-purple-600 transition"><i class="fas fa-inbox mr-1"></i> Inbox</a>
-                    <a href="index.html" class="text-gray-600 hover:text-purple-600 transition"><i class="fas fa-home mr-1"></i> Home</a>
+                    <a href="packages.html" class="text-gray-600 hover:text-purple-600 transition">
+                        <i class="fas fa-box-open mr-1"></i> Packages
+                    </a>
+                    <a href="inbox.html" class="text-gray-600 hover:text-purple-600 transition">
+                        <i class="fas fa-inbox mr-1"></i> Inbox
+                    </a>
+                    <a href="index.html" class="text-gray-600 hover:text-purple-600 transition">
+                        <i class="fas fa-home mr-1"></i> Home
+                    </a>
                 </div>
             </div>
         </div>
     </nav>
 
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div class="mb-8">
-            <h1 class="text-3xl font-bold text-gray-900">📊 Dashboard Overview</h1>
-            <p class="text-gray-600 mt-1">Real-time business intelligence and analytics</p>
+    <div class="flex h-screen bg-gray-50">
+        <!-- Sidebar -->
+        <div class="w-64 bg-white shadow-lg">
+            <div class="p-4 border-b">
+                <p class="text-sm text-gray-600">Navigation</p>
+            </div>
+            <nav class="p-2">
+                <a href="#" onclick="showSection('dashboard'); return false;" class="nav-link active flex items-center px-4 py-3 text-gray-700 rounded-lg mb-1">
+                    <i class="fas fa-chart-line w-5 mr-3"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="#" onclick="showSection('offices'); return false;" class="nav-link flex items-center px-4 py-3 text-gray-700 rounded-lg mb-1">
+                    <i class="fas fa-building w-5 mr-3"></i>
+                    <span>Office Management</span>
+                </a>
+                <a href="#" onclick="showSection('teams'); return false;" class="nav-link flex items-center px-4 py-3 text-gray-700 rounded-lg mb-1">
+                    <i class="fas fa-users w-5 mr-3"></i>
+                    <span>Team Management</span>
+                </a>
+                <a href="#" onclick="showSection('leads'); return false;" class="nav-link flex items-center px-4 py-3 text-gray-700 rounded-lg mb-1">
+                    <i class="fas fa-user-circle w-5 mr-3"></i>
+                    <span>Lead Tracking</span>
+                </a>
+                <a href="#" onclick="showSection('reports'); return false;" class="nav-link flex items-center px-4 py-3 text-gray-700 rounded-lg mb-1">
+                    <i class="fas fa-file-alt w-5 mr-3"></i>
+                    <span>Reports</span>
+                </a>
+            </nav>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            <div class="stat-card bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl shadow-lg p-6 text-white">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-blue-100 text-sm font-medium uppercase">Total Packages</p>
-                        <p id="statTotalPackages" class="text-4xl font-bold mt-2">--</p>
-                        <p class="text-blue-100 text-sm mt-2"><span id="statActivePackages" class="font-semibold">--</span> Active</p>
+        <!-- Main Content -->
+        <div class="flex-1 overflow-y-auto">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                
+                <!-- Dashboard Section -->
+                <div id="dashboard-section" class="section-content">
+                    <div class="mb-8">
+                        <h1 class="text-3xl font-bold text-gray-900">📊 Dashboard Overview</h1>
+                        <p class="text-gray-600 mt-1">Real-time business intelligence and analytics</p>
                     </div>
-                    <div class="bg-white bg-opacity-20 rounded-full p-4"><i class="fas fa-box-open text-4xl"></i></div>
-                </div>
-            </div>
-            <div class="stat-card bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl shadow-lg p-6 text-white">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-purple-100 text-sm font-medium uppercase">Total Leads</p>
-                        <p id="statTotalLeads" class="text-4xl font-bold mt-2">--</p>
-                        <p class="text-purple-100 text-sm mt-2"><span id="statNewLeads" class="font-semibold">--</span> New</p>
-                    </div>
-                    <div class="bg-white bg-opacity-20 rounded-full p-4"><i class="fas fa-users text-4xl"></i></div>
-                </div>
-            </div>
-            <div class="stat-card bg-gradient-to-br from-green-500 to-green-600 rounded-xl shadow-lg p-6 text-white">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-green-100 text-sm font-medium uppercase">Converted</p>
-                        <p id="statConvertedLeads" class="text-4xl font-bold mt-2">--</p>
-                        <p class="text-green-100 text-sm mt-2"><span id="statConversionRate" class="font-semibold">--</span>% Rate</p>
-                    </div>
-                    <div class="bg-white bg-opacity-20 rounded-full p-4"><i class="fas fa-trophy text-4xl"></i></div>
-                </div>
-            </div>
-            <div class="stat-card bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl shadow-lg p-6 text-white">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-orange-100 text-sm font-medium uppercase">Team Members</p>
-                        <p id="statTotalTeam" class="text-4xl font-bold mt-2">--</p>
-                        <p class="text-orange-100 text-sm mt-2"><span id="statTotalOffices" class="font-semibold">--</span> Offices</p>
-                    </div>
-                    <div class="bg-white bg-opacity-20 rounded-full p-4"><i class="fas fa-user-tie text-4xl"></i></div>
-                </div>
-            </div>
-        </div>
 
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-            <div class="bg-white rounded-lg shadow p-4"><div class="flex items-center justify-between"><div><p class="text-sm text-gray-500">Qualified</p><p id="statQualified" class="text-2xl font-bold text-green-600">--</p></div><i class="fas fa-check-circle text-2xl text-green-500"></i></div></div>
-            <div class="bg-white rounded-lg shadow p-4"><div class="flex items-center justify-between"><div><p class="text-sm text-gray-500">Contacted</p><p id="statContacted" class="text-2xl font-bold text-yellow-600">--</p></div><i class="fas fa-phone text-2xl text-yellow-500"></i></div></div>
-            <div class="bg-white rounded-lg shadow p-4"><div class="flex items-center justify-between"><div><p class="text-sm text-gray-500">High Priority</p><p id="statHighPriority" class="text-2xl font-bold text-red-600">--</p></div><i class="fas fa-exclamation-circle text-2xl text-red-500"></i></div></div>
-            <div class="bg-white rounded-lg shadow p-4"><div class="flex items-center justify-between"><div><p class="text-sm text-gray-500">Lost</p><p id="statLost" class="text-2xl font-bold text-gray-600">--</p></div><i class="fas fa-times-circle text-2xl text-gray-500"></i></div></div>
-        </div>
-
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-            <div class="bg-white rounded-xl shadow-lg p-6">
-                <h3 class="text-lg font-bold text-gray-900 mb-4">Lead Status Distribution</h3>
-                <div class="chart-wrapper">
-                    <canvas id="leadStatusChart"></canvas>
-                </div>
-            </div>
-            <div class="bg-white rounded-xl shadow-lg p-6">
-                <h3 class="text-lg font-bold text-gray-900 mb-4">Packages by Airport</h3>
-                <div class="chart-wrapper">
-                    <canvas id="packageChart"></canvas>
-                </div>
-            </div>
-        </div>
-
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div class="bg-white rounded-xl shadow-lg p-6">
-                <div class="flex items-center justify-between mb-4">
-                    <h3 class="text-lg font-bold text-gray-900">Recent Leads</h3>
-                    <a href="inbox.html" class="text-purple-600 hover:text-purple-700 text-sm font-medium">View All →</a>
-                </div>
-                <div id="recentLeadsList" class="space-y-3"></div>
-            </div>
-
-            <div class="bg-white rounded-xl shadow-lg p-6">
-                <h3 class="text-lg font-bold text-gray-900 mb-4">Quick Actions</h3>
-                <div class="space-y-3">
-                    <a href="packages.html" class="block bg-gradient-to-r from-blue-50 to-blue-100 rounded-lg p-4 hover:shadow-sm transition">
-                        <div class="flex items-center">
-                            <div class="bg-blue-500 rounded-lg p-3 mr-4"><i class="fas fa-plus text-white text-xl"></i></div>
-                            <div><p class="font-semibold text-gray-900">Add New Package</p><p class="text-sm text-gray-600">Create Umrah package</p></div>
+                    <!-- Main Statistics Grid -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                        <!-- Total Packages -->
+                        <div class="stat-card bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl shadow-lg p-6 text-white">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-blue-100 text-sm font-medium uppercase">Total Packages</p>
+                                    <p id="statTotalPackages" class="text-4xl font-bold mt-2">--</p>
+                                    <p class="text-blue-100 text-sm mt-2">
+                                        <span id="statActivePackages" class="font-semibold">--</span> Active
+                                    </p>
+                                </div>
+                                <div class="bg-white bg-opacity-20 rounded-full p-4">
+                                    <i class="fas fa-box-open text-4xl"></i>
+                                </div>
+                            </div>
                         </div>
-                    </a>
-                    <a href="inbox.html" class="block bg-gradient-to-r from-purple-50 to-purple-100 rounded-lg p-4 hover:shadow-sm transition">
-                        <div class="flex items-center">
-                            <div class="bg-purple-500 rounded-lg p-3 mr-4"><i class="fas fa-inbox text-white text-xl"></i></div>
-                            <div><p class="font-semibold text-gray-900">View Inbox</p><p class="text-sm text-gray-600">Manage customer leads</p></div>
+
+                        <!-- Total Leads -->
+                        <div class="stat-card bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl shadow-lg p-6 text-white">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-purple-100 text-sm font-medium uppercase">Total Leads</p>
+                                    <p id="statTotalLeads" class="text-4xl font-bold mt-2">--</p>
+                                    <p class="text-purple-100 text-sm mt-2">
+                                        <span id="statNewLeads" class="font-semibold">--</span> New
+                                    </p>
+                                </div>
+                                <div class="bg-white bg-opacity-20 rounded-full p-4">
+                                    <i class="fas fa-users text-4xl"></i>
+                                </div>
+                            </div>
                         </div>
-                    </a>
+
+                        <!-- Deal Done -->
+                        <div class="stat-card bg-gradient-to-br from-green-500 to-green-600 rounded-xl shadow-lg p-6 text-white">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-green-100 text-sm font-medium uppercase">Deal Done</p>
+                                    <p id="statDealDone" class="text-4xl font-bold mt-2">--</p>
+                                    <p class="text-green-100 text-sm mt-2">
+                                        <span id="statConversionRate" class="font-semibold">--</span>% Rate
+                                    </p>
+                                </div>
+                                <div class="bg-white bg-opacity-20 rounded-full p-4">
+                                    <i class="fas fa-trophy text-4xl"></i>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Team Size -->
+                        <div class="stat-card bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl shadow-lg p-6 text-white">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-orange-100 text-sm font-medium uppercase">Team Members</p>
+                                    <p id="statTotalTeam" class="text-4xl font-bold mt-2">--</p>
+                                    <p class="text-orange-100 text-sm mt-2">
+                                        <span id="statTotalOffices" class="font-semibold">--</span> Offices
+                                    </p>
+                                </div>
+                                <div class="bg-white bg-opacity-20 rounded-full p-4">
+                                    <i class="fas fa-user-tie text-4xl"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Secondary Stats -->
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+                        <div class="bg-white rounded-lg shadow p-4">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-sm text-gray-500">Negotiating</p>
+                                    <p id="statNegotiating" class="text-2xl font-bold text-green-600">--</p>
+                                </div>
+                                <i class="fas fa-handshake text-2xl text-green-500"></i>
+                            </div>
+                        </div>
+
+                        <div class="bg-white rounded-lg shadow p-4">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-sm text-gray-500">Contacted</p>
+                                    <p id="statContacted" class="text-2xl font-bold text-yellow-600">--</p>
+                                </div>
+                                <i class="fas fa-phone text-2xl text-yellow-500"></i>
+                            </div>
+                        </div>
+
+                        <div class="bg-white rounded-lg shadow p-4">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-sm text-gray-500">Follow Up</p>
+                                    <p id="statFollowUp" class="text-2xl font-bold text-blue-600">--</p>
+                                </div>
+                                <i class="fas fa-clock text-2xl text-blue-500"></i>
+                            </div>
+                        </div>
+
+                        <div class="bg-white rounded-lg shadow p-4">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-sm text-gray-500">Lost</p>
+                                    <p id="statLost" class="text-2xl font-bold text-gray-600">--</p>
+                                </div>
+                                <i class="fas fa-times-circle text-2xl text-gray-500"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Charts -->
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                        <div class="bg-white rounded-xl shadow-lg p-6">
+                            <h3 class="text-lg font-bold text-gray-900 mb-4">Lead Status Distribution</h3>
+                            <canvas id="leadStatusChart" height="200"></canvas>
+                        </div>
+
+                        <div class="bg-white rounded-xl shadow-lg p-6">
+                            <h3 class="text-lg font-bold text-gray-900 mb-4">Packages by Airport</h3>
+                            <canvas id="packageChart" height="200"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Recent Leads -->
+                    <div class="bg-white rounded-xl shadow-lg p-6">
+                        <h3 class="text-lg font-bold text-gray-900 mb-4">Recent Leads</h3>
+                        <div id="recentLeadsList" class="space-y-3">
+                            <div class="text-center py-8 text-gray-500">
+                                <i class="fas fa-spinner fa-spin text-4xl mb-2"></i>
+                                <p>Loading leads...</p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
+
+                <!-- Office Management Section -->
+                <div id="offices-section" class="section-content hidden">
+                    <div class="mb-6 flex justify-between items-center">
+                        <div>
+                            <h1 class="text-3xl font-bold text-gray-900">🏢 Office Management</h1>
+                            <p class="text-gray-600 mt-1">Manage office locations and details</p>
+                        </div>
+                        <button onclick="showOfficeModal()" class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700">
+                            <i class="fas fa-plus mr-2"></i>Add Office
+                        </button>
+                    </div>
+
+                    <div id="officesList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <div class="text-center py-12 text-gray-500 col-span-full">
+                            <i class="fas fa-spinner fa-spin text-4xl mb-2"></i>
+                            <p>Loading offices...</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Team Management Section -->
+                <div id="teams-section" class="section-content hidden">
+                    <div class="mb-6 flex justify-between items-center">
+                        <div>
+                            <h1 class="text-3xl font-bold text-gray-900">👥 Team Management</h1>
+                            <p class="text-gray-600 mt-1">Manage team members and performance</p>
+                        </div>
+                        <button onclick="showTeamModal()" class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700">
+                            <i class="fas fa-plus mr-2"></i>Add Member
+                        </button>
+                    </div>
+
+                    <div id="teamsList" class="space-y-4">
+                        <div class="text-center py-12 text-gray-500">
+                            <i class="fas fa-spinner fa-spin text-4xl mb-2"></i>
+                            <p>Loading team members...</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Lead Tracking Section -->
+                <div id="leads-section" class="section-content hidden">
+                    <div class="mb-6">
+                        <h1 class="text-3xl font-bold text-gray-900">📋 Lead Tracking</h1>
+                        <p class="text-gray-600 mt-1">View and manage all customer leads</p>
+                    </div>
+
+                    <!-- Filters -->
+                    <div class="bg-white rounded-lg shadow p-4 mb-6">
+                        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                            <select id="filterStatus" class="border rounded-lg px-3 py-2" onchange="filterLeads()">
+                                <option value="">All Status</option>
+                                <option value="new">New</option>
+                                <option value="contacted">Contacted</option>
+                                <option value="negotiating">Negotiating</option>
+                                <option value="deal_done">Deal Done</option>
+                                <option value="follow_up">Follow Up</option>
+                                <option value="lost">Lost</option>
+                                <option value="cancelled">Cancelled</option>
+                            </select>
+                            <select id="filterAirport" class="border rounded-lg px-3 py-2" onchange="filterLeads()">
+                                <option value="">All Airports</option>
+                                <option value="Lahore">Lahore</option>
+                                <option value="Karachi">Karachi</option>
+                                <option value="Islamabad">Islamabad</option>
+                            </select>
+                            <select id="filterPriority" class="border rounded-lg px-3 py-2" onchange="filterLeads()">
+                                <option value="">All Priority</option>
+                                <option value="urgent">Urgent</option>
+                                <option value="high">High</option>
+                                <option value="medium">Medium</option>
+                                <option value="low">Low</option>
+                            </select>
+                            <button onclick="resetFilters()" class="border border-gray-300 rounded-lg px-3 py-2 hover:bg-gray-50">
+                                <i class="fas fa-redo mr-2"></i>Reset
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="leadsTable" class="bg-white rounded-lg shadow overflow-hidden">
+                        <div class="text-center py-12 text-gray-500">
+                            <i class="fas fa-spinner fa-spin text-4xl mb-2"></i>
+                            <p>Loading leads...</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Reports Section -->
+                <div id="reports-section" class="section-content hidden">
+                    <div class="mb-6">
+                        <h1 class="text-3xl font-bold text-gray-900">📊 Reports & Analytics</h1>
+                        <p class="text-gray-600 mt-1">View detailed business reports</p>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <!-- Airport Performance -->
+                        <div class="bg-white rounded-xl shadow-lg p-6">
+                            <h3 class="text-lg font-bold text-gray-900 mb-4">Airport Performance</h3>
+                            <div id="airportReport" class="space-y-3">
+                                <p class="text-gray-500 text-center">Loading...</p>
+                            </div>
+                        </div>
+
+                        <!-- Team Performance -->
+                        <div class="bg-white rounded-xl shadow-lg p-6">
+                            <h3 class="text-lg font-bold text-gray-900 mb-4">Team Performance</h3>
+                            <div id="teamReport" class="space-y-3">
+                                <p class="text-gray-500 text-center">Loading...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
             </div>
         </div>
     </div>
 
+    <!-- Modals will be added here -->
+    <div id="modalContainer"></div>
+
     <script>
-        const API_URL = 'http://localhost:3000/api';
-        let dashboardData = { packages: [], leads: [], offices: [], teams: [] };
+        // =========================
+        // ✅ SMART API URL DETECTION
+        // =========================
+        const API_URL = (() => {
+            const hostname = window.location.hostname;
+            
+            // Production - using subdomain
+            if (hostname === 'app.umrahflex.com') {
+                return 'https://api.umrahflex.com/api';
+            }
+            
+            // Development - localhost
+            if (hostname === 'localhost' || hostname === '127.0.0.1') {
+                return 'http://localhost:3000/api';
+            }
+            
+            // Default fallback
+            return 'http://localhost:3000/api';
+        })();
+
+        console.log('🌐 API URL:', API_URL);
+
+        // =========================
+        // ✅ GLOBAL DATA STORE
+        // =========================
+        let dashboardData = {
+            packages: [],
+            leads: [],
+            offices: [],
+            teams: []
+        };
+
         let leadStatusChart = null;
         let packageChart = null;
 
-        async function apiFetch(path) {
-            const res = await fetch(`${API_URL}${path}`);
-            return res.json();
+        // =========================
+        // ✅ SECTION NAVIGATION
+        // =========================
+        function showSection(section) {
+            // Hide all sections
+            document.querySelectorAll('.section-content').forEach(el => el.classList.add('hidden'));
+            
+            // Remove active class from all nav links
+            document.querySelectorAll('.nav-link').forEach(el => el.classList.remove('active'));
+            
+            // Show selected section
+            document.getElementById(`${section}-section`).classList.remove('hidden');
+            
+            // Add active class to clicked nav link
+            event.target.closest('.nav-link').classList.add('active');
+            
+            // Load section data
+            if (section === 'offices') loadOffices();
+            if (section === 'teams') loadTeams();
+            if (section === 'leads') loadLeadsTable();
+            if (section === 'reports') loadReports();
         }
 
+        // =========================
+        // ✅ LOAD DASHBOARD DATA
+        // =========================
         async function loadDashboardData() {
             try {
+                // Fetch all data
                 const [packages, leads, offices, teams] = await Promise.all([
-                    apiFetch('/packages'), apiFetch('/leads'), apiFetch('/offices'), apiFetch('/teams')
+                    fetch(`${API_URL}/packages`).then(r => r.json()),
+                    fetch(`${API_URL}/leads`).then(r => r.json()),
+                    fetch(`${API_URL}/offices`).then(r => r.json()),
+                    fetch(`${API_URL}/teams`).then(r => r.json())
                 ]);
-                dashboardData = { 
-                    packages: Array.isArray(packages) ? packages : [], 
-                    leads: Array.isArray(leads) ? leads : [], 
-                    offices: Array.isArray(offices) ? offices : [], 
-                    teams: Array.isArray(teams) ? teams : [] 
-                };
+
+                dashboardData = { packages, leads, offices, teams };
+
                 updateStatistics();
                 updateCharts();
                 updateRecentLeads();
-            } catch (err) { console.error('Load Error:', err); }
+
+                console.log('✅ Dashboard loaded successfully');
+            } catch (err) {
+                console.error('❌ Failed to load dashboard:', err);
+                alert('❌ Failed to load dashboard data. Please check your connection.');
+            }
         }
 
+        // =========================
+        // ✅ UPDATE STATISTICS
+        // =========================
         function updateStatistics() {
             const { packages, leads, offices, teams } = dashboardData;
-            document.getElementById('statTotalPackages').textContent = packages.length;
-            document.getElementById('statActivePackages').textContent = packages.filter(p => p.status === 'Active').length;
-            document.getElementById('statTotalLeads').textContent = leads.length;
-            document.getElementById('statNewLeads').textContent = leads.filter(l => l.status === 'new').length;
-            document.getElementById('statConvertedLeads').textContent = leads.filter(l => l.status === 'converted').length;
-            document.getElementById('statQualified').textContent = leads.filter(l => l.status === 'qualified').length;
-            document.getElementById('statContacted').textContent = leads.filter(l => l.status === 'contacted').length;
-            document.getElementById('statLost').textContent = leads.filter(l => l.status === 'lost').length;
-            document.getElementById('statHighPriority').textContent = leads.filter(l => l.priority === 'high').length;
-            document.getElementById('statConversionRate').textContent = leads.length > 0 ? ((leads.filter(l => l.status === 'converted').length / leads.length) * 100).toFixed(1) : 0;
-            document.getElementById('statTotalTeam').textContent = teams.length;
-            document.getElementById('statTotalOffices').textContent = offices.length;
-        }
 
-        function updateCharts() {
-            const { packages, leads } = dashboardData;
-            if (leadStatusChart) leadStatusChart.destroy();
-            leadStatusChart = new Chart(document.getElementById('leadStatusChart'), {
-                type: 'doughnut',
-                data: {
-                    labels: ['New', 'Contacted', 'Qualified', 'Converted', 'Lost'],
-                    datasets: [{
-                        data: [
-                            leads.filter(l => l.status === 'new').length,
-                            leads.filter(l => l.status === 'contacted').length,
-                            leads.filter(l => l.status === 'qualified').length,
-                            leads.filter(l => l.status === 'converted').length,
-                            leads.filter(l => l.status === 'lost').length
-                        ],
-                        backgroundColor: ['#3b82f6', '#eab308', '#10b981', '#8b5cf6', '#ef4444']
-                    }]
-                },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
+            // Count statuses (CORRECTED)
+            const statusCounts = {
+                new: 0,
+                contacted: 0,
+                negotiating: 0,
+                deal_done: 0,
+                follow_up: 0,
+                lost: 0,
+                cancelled: 0
+            };
+
+            leads.forEach(lead => {
+                const status = lead.status || 'new';
+                if (statusCounts.hasOwnProperty(status)) {
+                    statusCounts[status]++;
+                }
             });
 
+            // Main stats
+            document.getElementById('statTotalPackages').textContent = packages.length;
+            document.getElementById('statActivePackages').textContent = 
+                packages.filter(p => p.status === 'Active').length;
+
+            document.getElementById('statTotalLeads').textContent = leads.length;
+            document.getElementById('statNewLeads').textContent = statusCounts.new;
+
+            document.getElementById('statDealDone').textContent = statusCounts.deal_done;
+            
+            const conversionRate = leads.length > 0 
+                ? ((statusCounts.deal_done / leads.length) * 100).toFixed(1)
+                : '0.0';
+            document.getElementById('statConversionRate').textContent = conversionRate;
+
+            document.getElementById('statTotalTeam').textContent = teams.length;
+            document.getElementById('statTotalOffices').textContent = offices.length;
+
+            // Secondary stats (CORRECTED)
+            document.getElementById('statNegotiating').textContent = statusCounts.negotiating;
+            document.getElementById('statContacted').textContent = statusCounts.contacted;
+            document.getElementById('statFollowUp').textContent = statusCounts.follow_up;
+            document.getElementById('statLost').textContent = statusCounts.lost;
+        }
+
+        // =========================
+        // ✅ UPDATE CHARTS
+        // =========================
+        function updateCharts() {
+            const { packages, leads } = dashboardData;
+
+            // Count statuses (CORRECTED)
+            const statusCounts = {
+                new: 0,
+                contacted: 0,
+                negotiating: 0,
+                deal_done: 0,
+                lost: 0
+            };
+
+            leads.forEach(lead => {
+                const status = lead.status || 'new';
+                if (statusCounts.hasOwnProperty(status)) {
+                    statusCounts[status]++;
+                }
+            });
+
+            // Lead Status Chart
+            if (leadStatusChart) leadStatusChart.destroy();
+
+            const ctx1 = document.getElementById('leadStatusChart');
+            leadStatusChart = new Chart(ctx1, {
+                type: 'doughnut',
+                data: {
+                    labels: ['New', 'Contacted', 'Negotiating', 'Deal Done', 'Lost'],
+                    datasets: [{
+                        data: [
+                            statusCounts.new,
+                            statusCounts.contacted,
+                            statusCounts.negotiating,
+                            statusCounts.deal_done,
+                            statusCounts.lost
+                        ],
+                        backgroundColor: [
+                            '#3b82f6', // blue
+                            '#eab308', // yellow
+                            '#10b981', // green
+                            '#8b5cf6', // purple
+                            '#ef4444'  // red
+                        ],
+                        borderWidth: 2,
+                        borderColor: '#ffffff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+
+            // Package by Airport Chart
             const airportCounts = {};
-            packages.forEach(p => { const a = p.departure_airport || 'Unknown'; airportCounts[a] = (airportCounts[a] || 0) + 1; });
+            packages.forEach(p => {
+                const airport = p.departure_airport || 'Unknown';
+                airportCounts[airport] = (airportCounts[airport] || 0) + 1;
+            });
+
             if (packageChart) packageChart.destroy();
-            packageChart = new Chart(document.getElementById('packageChart'), {
+
+            const ctx2 = document.getElementById('packageChart');
+            packageChart = new Chart(ctx2, {
                 type: 'bar',
                 data: {
                     labels: Object.keys(airportCounts),
-                    datasets: [{ label: 'Packages', data: Object.values(airportCounts), backgroundColor: '#8b5cf6', borderRadius: 8 }]
+                    datasets: [{
+                        label: 'Packages',
+                        data: Object.values(airportCounts),
+                        backgroundColor: [
+                            '#3b82f6',
+                            '#8b5cf6',
+                            '#10b981',
+                            '#f59e0b',
+                            '#ef4444'
+                        ],
+                        borderRadius: 8
+                    }]
                 },
-                options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } }
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                stepSize: 1
+                            }
+                        }
+                    }
+                }
             });
         }
 
+        // =========================
+        // ✅ UPDATE RECENT LEADS
+        // =========================
         function updateRecentLeads() {
+            const { leads } = dashboardData;
+            const recentLeads = [...leads]
+                .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+                .slice(0, 5);
+
             const container = document.getElementById('recentLeadsList');
-            const recent = [...dashboardData.leads].sort((a, b) => new Date(b.created_at) - new Date(a.created_at)).slice(0, 5);
-            if (recent.length === 0) { container.innerHTML = '<p class="text-center py-4 text-gray-500">No leads yet</p>'; return; }
-            container.innerHTML = recent.map(lead => `
-                <div class="border border-gray-200 rounded-lg p-4 hover:border-purple-300 transition flex justify-between items-center">
-                    <div>
-                        <p class="font-semibold text-gray-900">${lead.customer_name || 'N/A'}</p>
-                        <p class="text-sm text-gray-600"><i class="fab fa-whatsapp text-green-600"></i> ${lead.wa_number || ''}</p>
+
+            if (recentLeads.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-8 text-gray-500">
+                        <i class="fas fa-inbox text-4xl mb-2"></i>
+                        <p>No leads yet</p>
                     </div>
-                    <span class="px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">${(lead.status || 'new').toUpperCase()}</span>
-                </div>
-            `).join('');
+                `;
+                return;
+            }
+
+            // CORRECTED STATUS COLORS
+            const statusColors = {
+                new: 'bg-blue-100 text-blue-800',
+                contacted: 'bg-yellow-100 text-yellow-800',
+                negotiating: 'bg-green-100 text-green-800',
+                deal_done: 'bg-purple-100 text-purple-800',
+                follow_up: 'bg-orange-100 text-orange-800',
+                lost: 'bg-red-100 text-red-800',
+                cancelled: 'bg-gray-100 text-gray-800'
+            };
+
+            const priorityIcons = {
+                urgent: '<i class="fas fa-exclamation-circle text-red-500"></i>',
+                high: '<i class="fas fa-exclamation-circle text-red-500"></i>',
+                medium: '<i class="fas fa-exclamation-triangle text-orange-500"></i>',
+                low: '<i class="fas fa-info-circle text-blue-500"></i>'
+            };
+
+            container.innerHTML = recentLeads.map(lead => {
+                const timeAgo = getTimeAgo(new Date(lead.created_at));
+                const statusClass = statusColors[lead.status] || 'bg-gray-100 text-gray-800';
+
+                return `
+                    <div class="border border-gray-200 rounded-lg p-4 hover:border-purple-300 hover:shadow-md transition">
+                        <div class="flex items-start justify-between">
+                            <div class="flex-1">
+                                <div class="flex items-center space-x-2 mb-1">
+                                    <p class="font-semibold text-gray-900">${lead.customer_name || 'N/A'}</p>
+                                    ${priorityIcons[lead.priority] || ''}
+                                </div>
+                                <p class="text-sm text-gray-600 mb-2">
+                                    ${lead.wa_number ? `<i class="fab fa-whatsapp text-green-600"></i> ${lead.wa_number}` : ''}
+                                </p>
+                                <div class="flex items-center space-x-2">
+                                    <span class="px-2 py-1 rounded-full text-xs font-medium ${statusClass}">
+                                        ${(lead.status || 'new').replace('_', ' ').toUpperCase()}
+                                    </span>
+                                    <span class="text-xs text-gray-500">${timeAgo}</span>
+                                </div>
+                            </div>
+                            <a href="inbox.html" class="text-purple-600 hover:text-purple-700">
+                                <i class="fas fa-arrow-right"></i>
+                            </a>
+                        </div>
+                    </div>
+                `;
+            }).join('');
         }
 
-        function refreshDashboard() { loadDashboardData(); }
-        window.onload = loadDashboardData;
+        // =========================
+        // ✅ LOAD OFFICES
+        // =========================
+        async function loadOffices() {
+            try {
+                const offices = await fetch(`${API_URL}/offices`).then(r => r.json());
+                dashboardData.offices = offices;
+
+                const container = document.getElementById('officesList');
+
+                if (offices.length === 0) {
+                    container.innerHTML = `
+                        <div class="text-center py-12 text-gray-500 col-span-full">
+                            <i class="fas fa-building text-4xl mb-2"></i>
+                            <p>No offices yet</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                container.innerHTML = offices.map(office => `
+                    <div class="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition">
+                        <div class="flex items-start justify-between mb-4">
+                            <div>
+                                <h3 class="text-lg font-bold text-gray-900">${office.office_name}</h3>
+                                <p class="text-sm text-gray-600">${office.office_city}</p>
+                            </div>
+                            <span class="px-3 py-1 rounded-full text-xs font-medium ${office.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}">
+                                ${office.status || 'active'}
+                            </span>
+                        </div>
+                        <div class="space-y-2 text-sm text-gray-600">
+                            <p><i class="fas fa-map-marker-alt w-4"></i> ${office.office_address || 'N/A'}</p>
+                            <p><i class="fas fa-phone w-4"></i> ${office.office_phone || 'N/A'}</p>
+                            <p><i class="fas fa-user-tie w-4"></i> Manager: ${office.manager_name || 'N/A'}</p>
+                        </div>
+                        <div class="mt-4 flex space-x-2">
+                            <button onclick="editOffice(${office.office_id})" class="flex-1 px-3 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 text-sm">
+                                <i class="fas fa-edit mr-1"></i>Edit
+                            </button>
+                            <button onclick="deleteOffice(${office.office_id})" class="px-3 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 text-sm">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                `).join('');
+            } catch (err) {
+                console.error('❌ Failed to load offices:', err);
+            }
+        }
+
+        // =========================
+        // ✅ LOAD TEAMS
+        // =========================
+        async function loadTeams() {
+            try {
+                const teams = await fetch(`${API_URL}/teams`).then(r => r.json());
+                dashboardData.teams = teams;
+
+                const container = document.getElementById('teamsList');
+
+                if (teams.length === 0) {
+                    container.innerHTML = `
+                        <div class="text-center py-12 text-gray-500">
+                            <i class="fas fa-users text-4xl mb-2"></i>
+                            <p>No team members yet</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                container.innerHTML = teams.map(member => `
+                    <div class="bg-white rounded-xl shadow-lg p-6">
+                        <div class="flex items-start justify-between">
+                            <div class="flex items-center space-x-4">
+                                <div class="w-12 h-12 rounded-full bg-purple-100 flex items-center justify-center">
+                                    <i class="fas fa-user text-purple-600 text-xl"></i>
+                                </div>
+                                <div>
+                                    <h3 class="text-lg font-bold text-gray-900">${member.name}</h3>
+                                    <p class="text-sm text-gray-600">${member.role || 'N/A'}</p>
+                                    <p class="text-sm text-gray-500">
+                                        <i class="fas fa-phone mr-1"></i>${member.phone || 'N/A'}
+                                    </p>
+                                </div>
+                            </div>
+                            <span class="px-3 py-1 rounded-full text-xs font-medium ${member.is_active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}">
+                                ${member.is_active ? 'Active' : 'Inactive'}
+                            </span>
+                        </div>
+                        
+                        <div class="grid grid-cols-3 gap-4 mt-4 pt-4 border-t">
+                            <div class="text-center">
+                                <p class="text-2xl font-bold text-purple-600">${member.assigned_leads_count || 0}</p>
+                                <p class="text-xs text-gray-500">Assigned</p>
+                            </div>
+                            <div class="text-center">
+                                <p class="text-2xl font-bold text-green-600">${member.converted_deals_count || 0}</p>
+                                <p class="text-xs text-gray-500">Converted</p>
+                            </div>
+                            <div class="text-center">
+                                <p class="text-2xl font-bold text-blue-600">${member.daily_leads_limit || 10}</p>
+                                <p class="text-xs text-gray-500">Daily Limit</p>
+                            </div>
+                        </div>
+
+                        <div class="mt-4 flex space-x-2">
+                            <button onclick="editTeamMember(${member.user_id})" class="flex-1 px-3 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 text-sm">
+                                <i class="fas fa-edit mr-1"></i>Edit
+                            </button>
+                            <button onclick="deleteTeamMember(${member.user_id})" class="px-3 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 text-sm">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                `).join('');
+            } catch (err) {
+                console.error('❌ Failed to load teams:', err);
+            }
+        }
+
+        // =========================
+        // ✅ LOAD LEADS TABLE
+        // =========================
+        async function loadLeadsTable() {
+            try {
+                const leads = await fetch(`${API_URL}/leads`).then(r => r.json());
+                dashboardData.leads = leads;
+
+                const container = document.getElementById('leadsTable');
+
+                if (leads.length === 0) {
+                    container.innerHTML = `
+                        <div class="text-center py-12 text-gray-500">
+                            <i class="fas fa-inbox text-4xl mb-2"></i>
+                            <p>No leads yet</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                // CORRECTED STATUS COLORS
+                const statusColors = {
+                    new: 'bg-blue-100 text-blue-800',
+                    contacted: 'bg-yellow-100 text-yellow-800',
+                    negotiating: 'bg-green-100 text-green-800',
+                    deal_done: 'bg-purple-100 text-purple-800',
+                    follow_up: 'bg-orange-100 text-orange-800',
+                    lost: 'bg-red-100 text-red-800',
+                    cancelled: 'bg-gray-100 text-gray-800'
+                };
+
+                container.innerHTML = `
+                    <table class="w-full">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Customer</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Contact</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Airport</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Priority</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            ${leads.map(lead => `
+                                <tr class="hover:bg-gray-50">
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="font-medium text-gray-900">${lead.customer_name || 'N/A'}</div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="text-sm text-gray-600">${lead.wa_number || 'N/A'}</div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <span class="px-2 py-1 rounded-full text-xs font-medium ${statusColors[lead.status] || 'bg-gray-100 text-gray-800'}">
+                                            ${(lead.status || 'new').replace('_', ' ').toUpperCase()}
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                                        ${lead.departure_airport || 'N/A'}
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <span class="text-sm ${lead.priority === 'urgent' || lead.priority === 'high' ? 'text-red-600 font-medium' : 'text-gray-600'}">
+                                            ${(lead.priority || 'medium').toUpperCase()}
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                        ${new Date(lead.created_at).toLocaleDateString()}
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                        <a href="inbox.html" class="text-purple-600 hover:text-purple-800">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                `;
+            } catch (err) {
+                console.error('❌ Failed to load leads:', err);
+            }
+        }
+
+        // =========================
+        // ✅ LOAD REPORTS
+        // =========================
+        async function loadReports() {
+            const { leads, teams } = dashboardData;
+
+            // Airport Performance
+            const airportStats = {};
+            leads.forEach(lead => {
+                const airport = lead.departure_airport || 'Unknown';
+                if (!airportStats[airport]) {
+                    airportStats[airport] = { total: 0, deal_done: 0 };
+                }
+                airportStats[airport].total++;
+                if (lead.status === 'deal_done') {
+                    airportStats[airport].deal_done++;
+                }
+            });
+
+            const airportContainer = document.getElementById('airportReport');
+            airportContainer.innerHTML = Object.entries(airportStats).map(([airport, stats]) => {
+                const rate = stats.total > 0 ? ((stats.deal_done / stats.total) * 100).toFixed(1) : '0.0';
+                return `
+                    <div class="border border-gray-200 rounded-lg p-4">
+                        <div class="flex justify-between items-center">
+                            <div>
+                                <p class="font-semibold text-gray-900">${airport}</p>
+                                <p class="text-sm text-gray-600">${stats.total} total leads</p>
+                            </div>
+                            <div class="text-right">
+                                <p class="text-2xl font-bold text-green-600">${stats.deal_done}</p>
+                                <p class="text-sm text-gray-500">${rate}% conversion</p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            // Team Performance
+            const teamContainer = document.getElementById('teamReport');
+            teamContainer.innerHTML = teams.map(member => {
+                const rate = member.assigned_leads_count > 0 
+                    ? ((member.converted_deals_count / member.assigned_leads_count) * 100).toFixed(1)
+                    : '0.0';
+                return `
+                    <div class="border border-gray-200 rounded-lg p-4">
+                        <div class="flex justify-between items-center">
+                            <div>
+                                <p class="font-semibold text-gray-900">${member.name}</p>
+                                <p class="text-sm text-gray-600">${member.assigned_leads_count || 0} assigned</p>
+                            </div>
+                            <div class="text-right">
+                                <p class="text-2xl font-bold text-purple-600">${member.converted_deals_count || 0}</p>
+                                <p class="text-sm text-gray-500">${rate}% conversion</p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // =========================
+        // ✅ UTILITY FUNCTIONS
+        // =========================
+        function getTimeAgo(date) {
+            const seconds = Math.floor((new Date() - date) / 1000);
+            
+            if (seconds < 60) return 'Just now';
+            if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`;
+            if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`;
+            if (seconds < 604800) return `${Math.floor(seconds / 86400)}d ago`;
+            return date.toLocaleDateString();
+        }
+
+        function refreshDashboard() {
+            loadDashboardData();
+        }
+
+        function filterLeads() {
+            // Implement filter logic
+            loadLeadsTable();
+        }
+
+        function resetFilters() {
+            document.getElementById('filterStatus').value = '';
+            document.getElementById('filterAirport').value = '';
+            document.getElementById('filterPriority').value = '';
+            loadLeadsTable();
+        }
+
+        // Placeholder functions for modals
+        function showOfficeModal() {
+            alert('Office modal will be implemented');
+        }
+
+        function showTeamModal() {
+            alert('Team member modal will be implemented');
+        }
+
+        function editOffice(id) {
+            alert(`Edit office ${id}`);
+        }
+
+        function deleteOffice(id) {
+            if (confirm('Are you sure you want to delete this office?')) {
+                // Implement delete
+            }
+        }
+
+        function editTeamMember(id) {
+            alert(`Edit team member ${id}`);
+        }
+
+        function deleteTeamMember(id) {
+            if (confirm('Are you sure you want to delete this team member?')) {
+                // Implement delete
+            }
+        }
+
+        // =========================
+        // ✅ INITIALIZE
+        // =========================
+        async function init() {
+            try {
+                await loadDashboardData();
+                console.log('✅ Admin panel loaded successfully');
+            } catch (err) {
+                console.error('❌ Admin panel initialization error:', err);
+            }
+        }
+
+        // Start
+        init();
     </script>
 </body>
 </html>
