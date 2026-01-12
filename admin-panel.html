@@ -581,7 +581,8 @@
                                             <label className="block text-sm font-medium text-gray-700 mb-1">Phone *</label>
                                             <input type="text" name="office_phone" required defaultValue={editingOffice?.office_phone}
                                                    className="w-full border border-gray-300 rounded-lg px-3 py-2" 
-                                                   placeholder="+92-XX-XXXXXXX" />
+                                                   placeholder="+92-XX-XXXXXXX or 042XXXXXXX" />
+                                            <p className="text-xs text-gray-500 mt-1">Auto-formats: +92-335-8311116 or +92-42-7654321</p>
                                         </div>
                                         <div>
                                             <label className="block text-sm font-medium text-gray-700 mb-1">Email *</label>
@@ -644,7 +645,8 @@
                                             <label className="block text-sm font-medium text-gray-700 mb-1">Phone / WhatsApp *</label>
                                             <input type="text" name="phone" required defaultValue={editingTeam?.phone}
                                                    className="w-full border border-gray-300 rounded-lg px-3 py-2" 
-                                                   placeholder="+92-3XX-XXXXXXX" />
+                                                   placeholder="+92-3XX-XXXXXXX or 03XXXXXXXXX" />
+                                            <p className="text-xs text-gray-500 mt-1">Auto-formats to: +92-335-8311116</p>
                                         </div>
                                         <div>
                                             <label className="block text-sm font-medium text-gray-700 mb-1">Role *</label>
@@ -713,6 +715,47 @@
 
         const root = ReactDOM.createRoot(document.getElementById('root'));
         root.render(<AdminPanel />);
+
+        // ✅ Phone Number Auto-Format Function
+        function formatPhoneNumber(value) {
+            if (!value) return value;
+            
+            // Remove all non-digits except +
+            let cleaned = value.replace(/[^\d+]/g, '');
+            
+            // Add +92 if not present
+            if (!cleaned.startsWith('+92')) {
+                if (cleaned.startsWith('0')) {
+                    cleaned = '+92' + cleaned.substring(1);
+                } else if (cleaned.startsWith('92')) {
+                    cleaned = '+' + cleaned;
+                } else {
+                    cleaned = '+92' + cleaned;
+                }
+            }
+            
+            // Format based on length
+            let digits = cleaned.substring(3); // Remove +92
+            
+            if (digits.length === 10) {
+                // Mobile: +92-3XX-XXXXXXX
+                return `+92-${digits.substring(0,3)}-${digits.substring(3)}`;
+            } else if (digits.length === 9) {
+                // Landline: +92-XX-XXXXXXX
+                return `+92-${digits.substring(0,2)}-${digits.substring(2)}`;
+            }
+            
+            return cleaned;
+        }
+
+        // Auto-format phone inputs when they lose focus
+        document.addEventListener('DOMContentLoaded', () => {
+            document.addEventListener('blur', (e) => {
+                if (e.target.name === 'office_phone' || e.target.name === 'phone') {
+                    e.target.value = formatPhoneNumber(e.target.value);
+                }
+            }, true);
+        });
     </script>
 </body>
 </html>
