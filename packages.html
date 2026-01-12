@@ -43,7 +43,7 @@
         <div class="flex justify-between items-center mb-6">
             <div>
                 <h1 class="text-3xl font-bold text-gray-900">Package Management</h1>
-                <p class="text-gray-600 mt-1">Manage all Umrah packages with complete details</p>
+                <p class="text-gray-600 mt-1">Manage all Umrah packages with complete pricing details</p>
             </div>
             <button onclick="openAddModal()" class="bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-lg font-semibold transition">
                 <i class="fas fa-plus mr-2"></i>Add Package
@@ -63,11 +63,12 @@
                     </select>
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Month</label>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Islamic Month</label>
                     <select id="filterMonth" onchange="filterPackages()" class="w-full border border-gray-300 rounded-lg px-3 py-2">
                         <option value="">All Months</option>
                         <option value="Ramadan">Ramadan</option>
                         <option value="Shawwal">Shawwal</option>
+                        <option value="Dhul-Qadah">Dhul-Qadah</option>
                         <option value="Dhul-Hijjah">Dhul-Hijjah</option>
                         <option value="Other">Other</option>
                     </select>
@@ -98,10 +99,10 @@
                             <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">ID</th>
                             <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Package Name</th>
                             <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Airport</th>
-                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date & Month</th>
                             <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Duration</th>
                             <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Hotels</th>
-                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Sharing Price</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Price (Sharing)</th>
                             <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Via Flight</th>
                             <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
                             <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
@@ -113,7 +114,10 @@
                             <td class="px-4 py-3 text-sm text-gray-900">1</td>
                             <td class="px-4 py-3 text-sm font-medium text-gray-900">Ramadan Special 15 Days</td>
                             <td class="px-4 py-3 text-sm text-gray-600">Lahore</td>
-                            <td class="px-4 py-3 text-sm text-gray-600">2025-03-15</td>
+                            <td class="px-4 py-3 text-sm text-gray-600">
+                                <div>2025-03-15</div>
+                                <div class="text-xs text-purple-600">Ramadan</div>
+                            </td>
                             <td class="px-4 py-3 text-sm text-gray-600">15 Days</td>
                             <td class="px-4 py-3 text-sm text-gray-600">
                                 <div>Makkah: Al Shohada (400m)</div>
@@ -148,71 +152,61 @@
             <div class="bg-white rounded-lg shadow p-4">
                 <div class="flex items-center justify-between">
                     <div>
-                        <p class="text-sm text-gray-600">Total Packages</p>
-                        <p class="text-2xl font-bold text-gray-900">24</p>
+                        <p class="text-sm text-gray-500">Total Packages</p>
+                        <p class="text-2xl font-bold text-gray-800">24</p>
                     </div>
-                    <div class="bg-purple-100 rounded-full p-3">
-                        <i class="fas fa-box text-purple-600 text-xl"></i>
-                    </div>
+                    <i class="fas fa-box-open text-3xl text-blue-500"></i>
                 </div>
             </div>
             <div class="bg-white rounded-lg shadow p-4">
                 <div class="flex items-center justify-between">
                     <div>
-                        <p class="text-sm text-gray-600">Active Packages</p>
+                        <p class="text-sm text-gray-500">Active</p>
                         <p class="text-2xl font-bold text-green-600">18</p>
                     </div>
-                    <div class="bg-green-100 rounded-full p-3">
-                        <i class="fas fa-check-circle text-green-600 text-xl"></i>
-                    </div>
+                    <i class="fas fa-check-circle text-3xl text-green-500"></i>
                 </div>
             </div>
             <div class="bg-white rounded-lg shadow p-4">
                 <div class="flex items-center justify-between">
                     <div>
-                        <p class="text-sm text-gray-600">Sold Out</p>
+                        <p class="text-sm text-gray-500">Sold Out</p>
                         <p class="text-2xl font-bold text-red-600">3</p>
                     </div>
-                    <div class="bg-red-100 rounded-full p-3">
-                        <i class="fas fa-times-circle text-red-600 text-xl"></i>
-                    </div>
+                    <i class="fas fa-times-circle text-3xl text-red-500"></i>
                 </div>
             </div>
             <div class="bg-white rounded-lg shadow p-4">
                 <div class="flex items-center justify-between">
                     <div>
-                        <p class="text-sm text-gray-600">Avg. Price</p>
-                        <p class="text-2xl font-bold text-blue-600">PKR 275K</p>
+                        <p class="text-sm text-gray-500">Inactive</p>
+                        <p class="text-2xl font-bold text-gray-600">3</p>
                     </div>
-                    <div class="bg-blue-100 rounded-full p-3">
-                        <i class="fas fa-dollar-sign text-blue-600 text-xl"></i>
-                    </div>
+                    <i class="fas fa-pause-circle text-3xl text-gray-500"></i>
                 </div>
             </div>
         </div>
     </div>
 
     <!-- Add/Edit Package Modal -->
-    <div id="packageModal" class="modal fixed inset-0 bg-black bg-opacity-50 items-center justify-center z-50">
-        <div class="bg-white rounded-lg shadow-xl max-w-5xl w-full mx-4 max-h-screen overflow-y-auto">
-            <div class="sticky top-0 bg-white border-b px-6 py-4 flex justify-between items-center">
-                <h2 class="text-2xl font-bold text-gray-900" id="modalTitle">Add New Package</h2>
-                <button onclick="closeModal()" class="text-gray-400 hover:text-gray-600">
-                    <i class="fas fa-times text-2xl"></i>
-                </button>
+    <div id="packageModal" class="modal fixed inset-0 bg-black bg-opacity-50 items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-2xl max-w-5xl w-full max-h-[90vh] overflow-y-auto">
+            <div class="sticky top-0 bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-8 py-6 rounded-t-2xl">
+                <h2 id="modalTitle" class="text-2xl font-bold">Add New Package</h2>
+                <p class="text-purple-100 text-sm mt-1">Fill all required fields marked with *</p>
             </div>
 
-            <form id="packageForm" class="p-6">
+            <form id="packageForm" class="p-8">
                 <!-- Basic Information -->
-                <div class="mb-6">
+                <div class="mb-8">
                     <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                        <i class="fas fa-info-circle text-purple-600 mr-2"></i>
+                        <i class="fas fa-info-circle text-blue-600 mr-2"></i>
                         Basic Information
                     </h3>
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="md:col-span-2">
                             <label class="block text-sm font-medium text-gray-700 mb-1">Package Name *</label>
-                            <input type="text" name="package_name" required 
+                            <input type="text" name="package_name" required
                                    class="w-full border border-gray-300 rounded-lg px-3 py-2"
                                    placeholder="e.g., Ramadan Special 15 Days">
                         </div>
@@ -227,33 +221,32 @@
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Travel Date *</label>
-                            <input type="date" name="travel_date" required 
+                            <input type="date" name="travel_date" required
                                    class="w-full border border-gray-300 rounded-lg px-3 py-2">
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Duration (Days) *</label>
-                            <input type="number" name="duration_days" required min="5" max="60"
+                            <input type="number" name="duration_days" min="5" max="60" required
                                    class="w-full border border-gray-300 rounded-lg px-3 py-2"
                                    placeholder="e.g., 15">
                         </div>
+                        {/* ✅ NEW: Islamic Month */}
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Islamic Month *</label>
                             <select name="islamic_month" required class="w-full border border-gray-300 rounded-lg px-3 py-2">
                                 <option value="">Select Month</option>
-                                <option value="Muharram">Muharram</option>
-                                <option value="Safar">Safar</option>
-                                <option value="Rabi-ul-Awwal">Rabi-ul-Awwal</option>
-                                <option value="Rabi-ul-Akhir">Rabi-ul-Akhir</option>
-                                <option value="Jumada-al-Awwal">Jumada-al-Awwal</option>
-                                <option value="Jumada-al-Akhir">Jumada-al-Akhir</option>
-                                <option value="Rajab">Rajab</option>
-                                <option value="Shaban">Shaban</option>
                                 <option value="Ramadan">Ramadan</option>
                                 <option value="Shawwal">Shawwal</option>
                                 <option value="Dhul-Qadah">Dhul-Qadah</option>
                                 <option value="Dhul-Hijjah">Dhul-Hijjah</option>
+                                <option value="Muharram">Muharram</option>
+                                <option value="Safar">Safar</option>
+                                <option value="Rabi-al-Awwal">Rabi-al-Awwal</option>
+                                <option value="Other">Other</option>
                             </select>
+                            <p class="text-xs text-gray-500 mt-1">Islamic lunar month of travel</p>
                         </div>
+                        {/* ✅ NEW: Currency */}
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Currency *</label>
                             <select name="currency" required class="w-full border border-gray-300 rounded-lg px-3 py-2">
@@ -266,187 +259,202 @@
                 </div>
 
                 <!-- Hotel Details -->
-                <div class="mb-6">
+                <div class="mb-8">
                     <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                        <i class="fas fa-hotel text-blue-600 mr-2"></i>
-                        Hotel Details
+                        <i class="fas fa-hotel text-green-600 mr-2"></i>
+                        Hotel Information
                     </h3>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div class="border border-gray-200 rounded-lg p-4">
-                            <h4 class="font-semibold text-gray-800 mb-3">Makkah Hotel</h4>
+                        <!-- Makkah Hotel -->
+                        <div class="bg-green-50 rounded-lg p-4">
+                            <h4 class="font-semibold text-gray-800 mb-3">🕋 Makkah Hotel</h4>
                             <div class="space-y-3">
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-1">Hotel Name *</label>
-                                    <input type="text" name="makkah_hotel" required 
+                                    <input type="text" name="makkah_hotel" required
                                            class="w-full border border-gray-300 rounded-lg px-3 py-2"
                                            placeholder="e.g., Al Shohada Hotel">
                                 </div>
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-1">Distance from Haram (meters) *</label>
-                                    <input type="number" name="hotel_distance_makkah_m" required min="0"
+                                    <input type="number" name="hotel_distance_makkah_m" min="0" required
                                            class="w-full border border-gray-300 rounded-lg px-3 py-2"
                                            placeholder="e.g., 400">
+                                    <p class="text-xs text-gray-500 mt-1">Distance in meters from Masjid Al Haram</p>
                                 </div>
                             </div>
                         </div>
-                        <div class="border border-gray-200 rounded-lg p-4">
-                            <h4 class="font-semibold text-gray-800 mb-3">Madina Hotel</h4>
+
+                        <!-- Madina Hotel -->
+                        <div class="bg-blue-50 rounded-lg p-4">
+                            <h4 class="font-semibold text-gray-800 mb-3">🕌 Madina Hotel</h4>
                             <div class="space-y-3">
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-1">Hotel Name *</label>
-                                    <input type="text" name="madina_hotel" required 
+                                    <input type="text" name="madina_hotel" required
                                            class="w-full border border-gray-300 rounded-lg px-3 py-2"
                                            placeholder="e.g., Dar Al Taqwa Hotel">
                                 </div>
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">Distance from Masjid Nabawi (meters) *</label>
-                                    <input type="number" name="hotel_distance_medina_m" required min="0"
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Distance from Masjid (meters) *</label>
+                                    <input type="number" name="hotel_distance_medina_m" min="0" required
                                            class="w-full border border-gray-300 rounded-lg px-3 py-2"
                                            placeholder="e.g., 300">
+                                    <p class="text-xs text-gray-500 mt-1">Distance in meters from Masjid Nabawi</p>
                                 </div>
                             </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* ✅ COMPLETE PRICING SECTION - ALL TIERS */}
+                <div class="mb-8">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                        <i class="fas fa-money-bill-wave text-purple-600 mr-2"></i>
+                        Complete Pricing (All Categories)
+                    </h3>
+                    
+                    <!-- Adult Pricing -->
+                    <div class="mb-6">
+                        <h4 class="font-medium text-gray-700 mb-3 text-sm bg-purple-50 px-3 py-2 rounded">
+                            👨‍👩‍👧‍👦 Adult Pricing
+                        </h4>
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                            <div>
+                                <label class="block text-sm text-gray-600 mb-1">Adult Sharing (4+) *</label>
+                                <input type="number" name="adult_sharing_price" min="0" step="0.01" required
+                                       class="w-full border border-gray-300 rounded-lg px-3 py-2"
+                                       placeholder="e.g., 285000">
+                                <p class="text-xs text-gray-500 mt-1">4 or more persons sharing</p>
+                            </div>
+                            {/* ✅ NEW: Quad Price */}
+                            <div>
+                                <label class="block text-sm text-gray-600 mb-1">Quad (4 sharing)</label>
+                                <input type="number" name="quad_price" min="0" step="0.01"
+                                       class="w-full border border-gray-300 rounded-lg px-3 py-2"
+                                       placeholder="e.g., 285000">
+                                <p class="text-xs text-gray-500 mt-1">Exactly 4 persons</p>
+                            </div>
+                            {/* ✅ NEW: Triple Price */}
+                            <div>
+                                <label class="block text-sm text-gray-600 mb-1">Triple (3 sharing)</label>
+                                <input type="number" name="triple_price" min="0" step="0.01"
+                                       class="w-full border border-gray-300 rounded-lg px-3 py-2"
+                                       placeholder="e.g., 295000">
+                                <p class="text-xs text-gray-500 mt-1">3 persons in one room</p>
+                            </div>
+                            {/* ✅ NEW: Double Price */}
+                            <div>
+                                <label class="block text-sm text-gray-600 mb-1">Double (2 person)</label>
+                                <input type="number" name="double_price" min="0" step="0.01"
+                                       class="w-full border border-gray-300 rounded-lg px-3 py-2"
+                                       placeholder="e.g., 310000">
+                                <p class="text-xs text-gray-500 mt-1">2 persons in one room</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* ✅ NEW: Children & Infant Pricing */}
+                    <div>
+                        <h4 class="font-medium text-gray-700 mb-3 text-sm bg-blue-50 px-3 py-2 rounded">
+                            👶 Children & Infant Pricing
+                        </h4>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div>
+                                <label class="block text-sm text-gray-600 mb-1">Child with Bed</label>
+                                <input type="number" name="child_with_bed_price" min="0" step="0.01"
+                                       class="w-full border border-gray-300 rounded-lg px-3 py-2"
+                                       placeholder="e.g., 240000">
+                                <p class="text-xs text-gray-500 mt-1">2-12 years with bed</p>
+                            </div>
+                            <div>
+                                <label class="block text-sm text-gray-600 mb-1">Child without Bed</label>
+                                <input type="number" name="child_without_bed_price" min="0" step="0.01"
+                                       class="w-full border border-gray-300 rounded-lg px-3 py-2"
+                                       placeholder="e.g., 200000">
+                                <p class="text-xs text-gray-500 mt-1">2-12 years no bed</p>
+                            </div>
+                            <div>
+                                <label class="block text-sm text-gray-600 mb-1">Infant Price</label>
+                                <input type="number" name="infant_price" min="0" step="0.01"
+                                       class="w-full border border-gray-300 rounded-lg px-3 py-2"
+                                       placeholder="e.g., 50000">
+                                <p class="text-xs text-gray-500 mt-1">0-2 years</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Sharing Option -->
+                    <div class="mt-6">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Sharing Allowed</label>
+                        <div class="flex items-center space-x-6">
+                            <label class="flex items-center">
+                                <input type="radio" name="sharing_allowed" value="true" checked
+                                       class="w-4 h-4 text-purple-600">
+                                <span class="ml-2 text-sm text-gray-700">Yes (4+ person sharing allowed)</span>
+                            </label>
+                            <label class="flex items-center">
+                                <input type="radio" name="sharing_allowed" value="false"
+                                       class="w-4 h-4 text-purple-600">
+                                <span class="ml-2 text-sm text-gray-700">No (Private rooms only)</span>
+                            </label>
                         </div>
                     </div>
                 </div>
 
                 <!-- Flight Details -->
-                <div class="mb-6">
+                <div class="mb-8">
                     <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                        <i class="fas fa-plane text-indigo-600 mr-2"></i>
-                        Flight Details
+                        <i class="fas fa-plane text-blue-600 mr-2"></i>
+                        Flight Information
                     </h3>
-                    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                        <div class="flex items-center mb-4">
+                    <div class="mb-4">
+                        <label class="flex items-center cursor-pointer">
                             <input type="checkbox" id="viaFlight" name="via_flight" onchange="toggleFlightDetails()"
-                                   class="w-4 h-4 text-blue-600 rounded">
-                            <label for="viaFlight" class="ml-2 text-sm font-medium text-gray-700">
-                                Via Flight (Layover/Transit)
-                            </label>
-                        </div>
-                        
-                        <div id="flightDetailsSection" style="display: none;">
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <!-- Going Flight -->
-                                <div class="border border-blue-300 rounded-lg p-4 bg-white">
-                                    <h4 class="font-semibold text-gray-800 mb-3 flex items-center">
-                                        <i class="fas fa-plane-departure text-green-600 mr-2"></i>
-                                        Going Flight (Pakistan → Saudi Arabia)
-                                    </h4>
-                                    <div class="space-y-3">
-                                        <div>
-                                            <label class="block text-sm font-medium text-gray-700 mb-1">Layover City</label>
-                                            <input type="text" name="going_layover_city" 
-                                                   class="w-full border border-gray-300 rounded-lg px-3 py-2"
-                                                   placeholder="e.g., Dubai, Sharjah, Jeddah">
-                                        </div>
-                                        <div>
-                                            <label class="block text-sm font-medium text-gray-700 mb-1">Layover Duration (hours)</label>
-                                            <input type="number" name="going_layover_duration" step="0.5" min="0"
-                                                   class="w-full border border-gray-300 rounded-lg px-3 py-2"
-                                                   placeholder="e.g., 3.5">
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Return Flight -->
-                                <div class="border border-blue-300 rounded-lg p-4 bg-white">
-                                    <h4 class="font-semibold text-gray-800 mb-3 flex items-center">
-                                        <i class="fas fa-plane-arrival text-orange-600 mr-2"></i>
-                                        Return Flight (Saudi Arabia → Pakistan)
-                                    </h4>
-                                    <div class="space-y-3">
-                                        <div>
-                                            <label class="block text-sm font-medium text-gray-700 mb-1">Layover City</label>
-                                            <input type="text" name="return_layover_city" 
-                                                   class="w-full border border-gray-300 rounded-lg px-3 py-2"
-                                                   placeholder="e.g., Dubai, Sharjah, Jeddah">
-                                        </div>
-                                        <div>
-                                            <label class="block text-sm font-medium text-gray-700 mb-1">Layover Duration (hours)</label>
-                                            <input type="number" name="return_layover_duration" step="0.5" min="0"
-                                                   class="w-full border border-gray-300 rounded-lg px-3 py-2"
-                                                   placeholder="e.g., 2.5">
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="mt-3 text-sm text-gray-600 bg-blue-100 p-3 rounded">
-                                <i class="fas fa-info-circle mr-1"></i>
-                                <strong>Note:</strong> If direct flight, leave layover fields empty
-                            </div>
-                        </div>
+                                   class="w-4 h-4 text-blue-600">
+                            <span class="ml-2 text-sm font-medium text-gray-700">Flight has layover/transit</span>
+                        </label>
                     </div>
-                </div>
 
-                <!-- Pricing Details -->
-                <div class="mb-6">
-                    <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                        <i class="fas fa-tags text-green-600 mr-2"></i>
-                        Pricing Details (Per Person)
-                    </h3>
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Sharing Price *</label>
-                            <input type="number" name="adult_sharing_price" required min="0"
-                                   class="w-full border border-gray-300 rounded-lg px-3 py-2"
-                                   placeholder="e.g., 285000">
-                            <p class="text-xs text-gray-500 mt-1">4+ people sharing room</p>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Quad Price</label>
-                            <input type="number" name="quad_price" min="0"
-                                   class="w-full border border-gray-300 rounded-lg px-3 py-2"
-                                   placeholder="e.g., 295000">
-                            <p class="text-xs text-gray-500 mt-1">4 people in room</p>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Triple Price</label>
-                            <input type="number" name="triple_price" min="0"
-                                   class="w-full border border-gray-300 rounded-lg px-3 py-2"
-                                   placeholder="e.g., 310000">
-                            <p class="text-xs text-gray-500 mt-1">3 people in room</p>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Double Price</label>
-                            <input type="number" name="double_price" min="0"
-                                   class="w-full border border-gray-300 rounded-lg px-3 py-2"
-                                   placeholder="e.g., 335000">
-                            <p class="text-xs text-gray-500 mt-1">2 people in room</p>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Child with Bed</label>
-                            <input type="number" name="child_with_bed_price" min="0"
-                                   class="w-full border border-gray-300 rounded-lg px-3 py-2"
-                                   placeholder="e.g., 240000">
-                            <p class="text-xs text-gray-500 mt-1">2-12 years with bed</p>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Child without Bed</label>
-                            <input type="number" name="child_without_bed_price" min="0"
-                                   class="w-full border border-gray-300 rounded-lg px-3 py-2"
-                                   placeholder="e.g., 200000">
-                            <p class="text-xs text-gray-500 mt-1">2-12 years no bed</p>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Infant Price</label>
-                            <input type="number" name="infant_price" min="0"
-                                   class="w-full border border-gray-300 rounded-lg px-3 py-2"
-                                   placeholder="e.g., 50000">
-                            <p class="text-xs text-gray-500 mt-1">0-2 years</p>
-                        </div>
-                        <div class="md:col-span-2">
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Sharing Allowed</label>
-                            <div class="flex items-center space-x-6 mt-2">
-                                <label class="flex items-center">
-                                    <input type="radio" name="sharing_allowed" value="Yes" checked
-                                           class="w-4 h-4 text-purple-600">
-                                    <span class="ml-2 text-sm text-gray-700">Yes</span>
-                                </label>
-                                <label class="flex items-center">
-                                    <input type="radio" name="sharing_allowed" value="No"
-                                           class="w-4 h-4 text-purple-600">
-                                    <span class="ml-2 text-sm text-gray-700">No</span>
-                                </label>
+                    <div id="flightDetailsSection" style="display: none;">
+                        {/* ✅ BOTH Going and Return Flight Details */}
+                        <div class="space-y-4">
+                            <!-- Going Flight -->
+                            <div class="bg-blue-50 rounded-lg p-4">
+                                <h4 class="font-semibold text-gray-800 mb-3">✈️ Going Flight Layover</h4>
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-sm text-gray-600 mb-1">Layover City</label>
+                                        <input type="text" name="going_layover_city"
+                                               class="w-full border border-gray-300 rounded-lg px-3 py-2"
+                                               placeholder="e.g., Dubai">
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm text-gray-600 mb-1">Layover Duration (hours)</label>
+                                        <input type="number" name="going_layover_duration" step="0.5" min="0"
+                                               class="w-full border border-gray-300 rounded-lg px-3 py-2"
+                                               placeholder="e.g., 3.5">
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* ✅ NEW: Return Flight */}
+                            <div class="bg-green-50 rounded-lg p-4">
+                                <h4 class="font-semibold text-gray-800 mb-3">🔙 Return Flight Layover</h4>
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-sm text-gray-600 mb-1">Return Layover City</label>
+                                        <input type="text" name="return_layover_city"
+                                               class="w-full border border-gray-300 rounded-lg px-3 py-2"
+                                               placeholder="e.g., Dubai">
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm text-gray-600 mb-1">Return Duration (hours)</label>
+                                        <input type="number" name="return_layover_duration" step="0.5" min="0"
+                                               class="w-full border border-gray-300 rounded-lg px-3 py-2"
+                                               placeholder="e.g., 2.5">
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -555,7 +563,7 @@
             });
             
             console.log('Package Data:', packageData);
-            alert('Package saved successfully!');
+            alert('✅ Package saved successfully with all pricing tiers!');
             closeModal();
         });
 
