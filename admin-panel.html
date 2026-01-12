@@ -8,6 +8,10 @@
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 50; }
+        .modal.active { display: flex; align-items: center; justify-content: center; }
+    </style>
 </head>
 <body>
     <div id="root"></div>
@@ -26,12 +30,11 @@
             DollarSign: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>,
             Plus: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>,
             Edit: () => <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>,
+            Trash: () => <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>,
             Eye: () => <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>,
         };
 
-        // ✅ Helper Functions
         const formatCurrency = (amount) => `PKR ${amount.toLocaleString()}`;
-        
         const getLeadAge = (created_at) => {
             const now = new Date();
             const created = new Date(created_at);
@@ -41,7 +44,6 @@
             const days = Math.floor(hours / 24);
             return `${days}d ago`;
         };
-        
         const getConversionRate = (deals, total) => {
             if (total === 0) return 0;
             return ((deals / total) * 100).toFixed(1);
@@ -50,131 +52,143 @@
         function AdminPanel() {
             const [activeTab, setActiveTab] = useState('dashboard');
             const [userRole, setUserRole] = useState('admin');
+            
+            // Modal states
+            const [officeModalOpen, setOfficeModalOpen] = useState(false);
+            const [teamModalOpen, setTeamModalOpen] = useState(false);
+            const [editingOffice, setEditingOffice] = useState(null);
+            const [editingTeam, setEditingTeam] = useState(null);
 
-            const offices = [
-                { office_id: 1, office_name: 'Head Office Karachi', office_city: 'Karachi', office_address: 'Shahrah-e-Faisal', status: 'active', teams: 8, leads: 425, deals: 156 },
-                { office_id: 2, office_name: 'Lahore Branch', office_city: 'Lahore', office_address: 'MM Alam Road', status: 'active', teams: 5, leads: 268, deals: 87 },
-                { office_id: 3, office_name: 'Islamabad Branch', office_city: 'Islamabad', office_address: 'Blue Area', status: 'active', teams: 4, leads: 154, deals: 41 }
-            ];
+            // Initial data
+            const [offices, setOffices] = useState([
+                { office_id: 1, office_name: 'Head Office Karachi', office_city: 'Karachi', office_address: 'Shahrah-e-Faisal', office_phone: '+92-21-1234567', office_email: 'karachi@umrah.com', manager_name: 'Bilal Khan', status: 'active', teams: 8, leads: 425, deals: 156 },
+                { office_id: 2, office_name: 'Lahore Branch', office_city: 'Lahore', office_address: 'MM Alam Road', office_phone: '+92-42-7654321', office_email: 'lahore@umrah.com', manager_name: 'Ahmed Ali', status: 'active', teams: 5, leads: 268, deals: 87 },
+                { office_id: 3, office_name: 'Islamabad Branch', office_city: 'Islamabad', office_address: 'Blue Area', office_phone: '+92-51-9876543', office_email: 'islamabad@umrah.com', manager_name: 'Usman Shah', status: 'active', teams: 4, leads: 154, deals: 41 }
+            ]);
 
-            // ✅ UPDATED TEAMS DATA - WITH ALL DATABASE FIELDS
-            const teams = [
-                { 
-                    user_id: 1,
-                    name: 'Ahmed Khan',
-                    email: 'ahmed@umrah.com',
-                    phone: '+92-300-1234567',  // This is also WhatsApp
-                    role: 'manager',  // ✅ ADDED
-                    office_id: 1,
-                    office_name: 'Head Office Karachi',
-                    daily_leads_limit: 20,  // ✅ ADDED - NEW FIELD!
-                    assigned_leads_count: 23,  // ✅ CORRECT FIELD NAME
-                    converted_deals_count: 34,
-                    total_revenue: 12500000,  // ✅ ADDED
-                    is_active: true,  // ✅ CORRECT FIELD NAME
-                    created_at: '2024-01-15'  // ✅ ADDED
-                },
-                { 
-                    user_id: 2,
-                    name: 'Fatima Ali',
-                    email: 'fatima@umrah.com',
-                    phone: '+92-321-9876543',
-                    role: 'sales',
-                    office_id: 1,
-                    office_name: 'Head Office Karachi',
-                    daily_leads_limit: 15,
-                    assigned_leads_count: 19,
-                    converted_deals_count: 31,
-                    total_revenue: 9800000,
-                    is_active: true,
-                    created_at: '2024-02-10'
-                },
-                { 
-                    user_id: 3,
-                    name: 'Usman Malik',
-                    email: 'usman@umrah.com',
-                    phone: '+92-333-4567890',
-                    role: 'sales',
-                    office_id: 2,
-                    office_name: 'Lahore Branch',
-                    daily_leads_limit: 10,
-                    assigned_leads_count: 15,
-                    converted_deals_count: 23,
-                    total_revenue: 7200000,
-                    is_active: true,
-                    created_at: '2024-03-05'
-                }
-            ];
+            const [teams, setTeams] = useState([
+                { user_id: 1, name: 'Ahmed Khan', email: 'ahmed@umrah.com', phone: '+92-300-1234567', role: 'manager', office_id: 1, office_name: 'Head Office Karachi', daily_leads_limit: 20, assigned_leads_count: 23, converted_deals_count: 34, total_revenue: 12500000, is_active: true, created_at: '2024-01-15' },
+                { user_id: 2, name: 'Fatima Ali', email: 'fatima@umrah.com', phone: '+92-321-9876543', role: 'sales', office_id: 1, office_name: 'Head Office Karachi', daily_leads_limit: 15, assigned_leads_count: 19, converted_deals_count: 31, total_revenue: 9800000, is_active: true, created_at: '2024-02-10' },
+                { user_id: 3, name: 'Usman Malik', email: 'usman@umrah.com', phone: '+92-333-4567890', role: 'sales', office_id: 2, office_name: 'Lahore Branch', daily_leads_limit: 10, assigned_leads_count: 15, converted_deals_count: 23, total_revenue: 7200000, is_active: true, created_at: '2024-03-05' }
+            ]);
 
-            // ✅ UPDATED LEADS DATA - WITH ALL DATABASE FIELDS
             const leads = [
-                { 
-                    lead_id: 123,
-                    wa_number: '+92-300-1234567',
-                    customer_name: 'Ali Ahmed',  // ✅ ADDED
-                    email: 'ali@email.com',
-                    city: 'Karachi',
-                    assigned_to: 1,
-                    assigned_to_name: 'Ahmed Khan',
-                    assigned_office: 1,
-                    office_name: 'Karachi',
-                    departure_airport: 'Karachi',
-                    preferred_month: 'Ramadan',  // ✅ ADDED
-                    duration_days: 15,  // ✅ ADDED
-                    number_of_persons: 4,  // ✅ ADDED
-                    budget_per_person: 180000,  // ✅ SINGLE VALUE
-                    status: 'contacted',  // ✅ CORRECT VALUES
-                    priority: 'high',  // ✅ ADDED
-                    source: 'whatsapp',  // ✅ ADDED
-                    created_at: '2025-01-12T10:30:00',  // ✅ ADDED
-                    last_contact_date: '2025-01-12T14:20:00',  // ✅ ADDED
-                    notes: 'Interested in Ramadan package'  // ✅ ADDED
-                },
-                { 
-                    lead_id: 124,
-                    wa_number: '+92-321-7654321',
-                    customer_name: 'Sara Khan',
-                    email: 'sara@email.com',
-                    city: 'Lahore',
-                    assigned_to: 2,
-                    assigned_to_name: 'Fatima Ali',
-                    assigned_office: 1,
-                    office_name: 'Karachi',
-                    departure_airport: 'Lahore',
-                    preferred_month: 'Shawwal',
-                    duration_days: 10,
-                    number_of_persons: 6,
-                    budget_per_person: 220000,
-                    status: 'follow_up',
-                    priority: 'medium',
-                    source: 'whatsapp',
-                    created_at: '2025-01-11T15:45:00',
-                    last_contact_date: '2025-01-12T09:15:00',
-                    notes: 'Call back tomorrow'
-                },
-                { 
-                    lead_id: 125,
-                    wa_number: '+92-333-9876543',
-                    customer_name: 'Hassan Malik',
-                    email: 'hassan@email.com',
-                    city: 'Islamabad',
-                    assigned_to: 3,
-                    assigned_to_name: 'Usman Malik',
-                    assigned_office: 2,
-                    office_name: 'Lahore',
-                    departure_airport: 'Islamabad',
-                    preferred_month: 'Dhul-Hijjah',
-                    duration_days: 20,
-                    number_of_persons: 2,
-                    budget_per_person: 450000,
-                    status: 'deal_done',
-                    priority: 'urgent',
-                    source: 'website',
-                    created_at: '2025-01-10T08:20:00',
-                    last_contact_date: '2025-01-11T16:30:00',
-                    notes: 'Payment received'
-                }
+                { lead_id: 123, wa_number: '+92-300-1234567', customer_name: 'Ali Ahmed', email: 'ali@email.com', city: 'Karachi', assigned_to: 1, assigned_to_name: 'Ahmed Khan', assigned_office: 1, office_name: 'Karachi', departure_airport: 'Karachi', preferred_month: 'Ramadan', duration_days: 15, number_of_persons: 4, budget_per_person: 180000, status: 'contacted', priority: 'high', source: 'whatsapp', created_at: '2025-01-12T10:30:00', last_contact_date: '2025-01-12T14:20:00', notes: 'Interested in Ramadan package' },
+                { lead_id: 124, wa_number: '+92-321-7654321', customer_name: 'Sara Khan', email: 'sara@email.com', city: 'Lahore', assigned_to: 2, assigned_to_name: 'Fatima Ali', assigned_office: 1, office_name: 'Karachi', departure_airport: 'Lahore', preferred_month: 'Shawwal', duration_days: 10, number_of_persons: 6, budget_per_person: 220000, status: 'follow_up', priority: 'medium', source: 'whatsapp', created_at: '2025-01-11T15:45:00', last_contact_date: '2025-01-12T09:15:00', notes: 'Call back tomorrow' },
+                { lead_id: 125, wa_number: '+92-333-9876543', customer_name: 'Hassan Malik', email: 'hassan@email.com', city: 'Islamabad', assigned_to: 3, assigned_to_name: 'Usman Malik', assigned_office: 2, office_name: 'Lahore', departure_airport: 'Islamabad', preferred_month: 'Dhul-Hijjah', duration_days: 20, number_of_persons: 2, budget_per_person: 450000, status: 'deal_done', priority: 'urgent', source: 'website', created_at: '2025-01-10T08:20:00', last_contact_date: '2025-01-11T16:30:00', notes: 'Payment received' }
             ];
+
+            // Office Management Functions
+            const openAddOfficeModal = () => {
+                setEditingOffice(null);
+                setOfficeModalOpen(true);
+            };
+
+            const openEditOfficeModal = (office) => {
+                setEditingOffice(office);
+                setOfficeModalOpen(true);
+            };
+
+            const handleSaveOffice = (e) => {
+                e.preventDefault();
+                const formData = new FormData(e.target);
+                const officeData = {
+                    office_name: formData.get('office_name'),
+                    office_city: formData.get('office_city'),
+                    office_address: formData.get('office_address'),
+                    office_phone: formData.get('office_phone'),
+                    office_email: formData.get('office_email'),
+                    manager_name: formData.get('manager_name'),
+                    status: formData.get('status')
+                };
+
+                if (editingOffice) {
+                    // Update existing
+                    setOffices(offices.map(o => 
+                        o.office_id === editingOffice.office_id 
+                            ? { ...o, ...officeData }
+                            : o
+                    ));
+                    alert('✅ Office updated successfully!');
+                } else {
+                    // Add new
+                    const newOffice = {
+                        ...officeData,
+                        office_id: Math.max(...offices.map(o => o.office_id)) + 1,
+                        teams: 0,
+                        leads: 0,
+                        deals: 0
+                    };
+                    setOffices([...offices, newOffice]);
+                    alert('✅ Office added successfully!');
+                }
+                
+                setOfficeModalOpen(false);
+            };
+
+            const handleDeleteOffice = (officeId) => {
+                if (confirm('Are you sure you want to delete this office? All associated teams will be unassigned.')) {
+                    setOffices(offices.filter(o => o.office_id !== officeId));
+                    alert('✅ Office deleted successfully!');
+                }
+            };
+
+            // Team Management Functions
+            const openAddTeamModal = () => {
+                setEditingTeam(null);
+                setTeamModalOpen(true);
+            };
+
+            const openEditTeamModal = (team) => {
+                setEditingTeam(team);
+                setTeamModalOpen(true);
+            };
+
+            const handleSaveTeam = (e) => {
+                e.preventDefault();
+                const formData = new FormData(e.target);
+                const teamData = {
+                    name: formData.get('name'),
+                    email: formData.get('email'),
+                    phone: formData.get('phone'),
+                    role: formData.get('role'),
+                    office_id: parseInt(formData.get('office_id')),
+                    office_name: offices.find(o => o.office_id === parseInt(formData.get('office_id')))?.office_name || '',
+                    daily_leads_limit: parseInt(formData.get('daily_leads_limit')),
+                    is_active: formData.get('is_active') === 'true'
+                };
+
+                if (editingTeam) {
+                    // Update existing
+                    setTeams(teams.map(t => 
+                        t.user_id === editingTeam.user_id 
+                            ? { ...t, ...teamData }
+                            : t
+                    ));
+                    alert('✅ Team member updated successfully!');
+                } else {
+                    // Add new
+                    const newTeam = {
+                        ...teamData,
+                        user_id: Math.max(...teams.map(t => t.user_id)) + 1,
+                        assigned_leads_count: 0,
+                        converted_deals_count: 0,
+                        total_revenue: 0,
+                        created_at: new Date().toISOString().split('T')[0]
+                    };
+                    setTeams([...teams, newTeam]);
+                    alert('✅ Team member added successfully!');
+                }
+                
+                setTeamModalOpen(false);
+            };
+
+            const handleDeleteTeam = (userId) => {
+                if (confirm('Are you sure you want to delete this team member? All assigned leads will be unassigned.')) {
+                    setTeams(teams.filter(t => t.user_id !== userId));
+                    alert('✅ Team member deleted successfully!');
+                }
+            };
 
             const StatCard = ({ title, value, subtitle, Icon, color, trend }) => (
                 <div className="bg-white rounded-xl shadow-lg p-6 border-l-4" style={{ borderColor: color }}>
@@ -197,7 +211,6 @@
                 </div>
             );
 
-            // ✅ UPDATED STATUS BADGES - CORRECT VALUES
             const getStatusBadge = (status) => {
                 const styles = {
                     new: 'bg-blue-100 text-blue-700',
@@ -211,7 +224,6 @@
                 return <span className={`px-3 py-1 rounded-full text-xs font-semibold ${styles[status] || 'bg-gray-100 text-gray-700'}`}>{status.replace('_', ' ')}</span>;
             };
 
-            // ✅ PRIORITY BADGES
             const getPriorityBadge = (priority) => {
                 const styles = {
                     urgent: 'bg-red-100 text-red-700',
@@ -222,7 +234,6 @@
                 return <span className={`px-2 py-1 rounded text-xs font-semibold ${styles[priority]}`}>{priority.toUpperCase()}</span>;
             };
 
-            // ✅ ROLE BADGE
             const getRoleBadge = (role) => {
                 const styles = {
                     admin: 'bg-purple-100 text-purple-700',
@@ -286,37 +297,68 @@
                             <div>
                                 <h2 className="text-2xl font-bold text-gray-800 mb-6">Dashboard Overview</h2>
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                                    <StatCard
-                                        title="Total Leads"
-                                        value="847"
-                                        subtitle="This month"
-                                        Icon={Icons.Users}
-                                        color="#3B82F6"
-                                        trend="+12.5%"
-                                    />
-                                    <StatCard
-                                        title="Deals Closed"
-                                        value="284"
-                                        subtitle="Conversion: 33.5%"
-                                        Icon={Icons.CheckCircle}
-                                        color="#10B981"
-                                        trend="+8.2%"
-                                    />
-                                    <StatCard
-                                        title="Total Revenue"
-                                        value="PKR 85M"
-                                        subtitle="This month"
-                                        Icon={Icons.DollarSign}
-                                        color="#8B5CF6"
-                                        trend="+15.3%"
-                                    />
-                                    <StatCard
-                                        title="Active Team"
-                                        value="17"
-                                        subtitle="Sales members"
-                                        Icon={Icons.Users}
-                                        color="#F59E0B"
-                                    />
+                                    <StatCard title="Total Leads" value="847" subtitle="This month" Icon={Icons.Users} color="#3B82F6" trend="+12.5%" />
+                                    <StatCard title="Deals Closed" value="284" subtitle="Conversion: 33.5%" Icon={Icons.CheckCircle} color="#10B981" trend="+8.2%" />
+                                    <StatCard title="Total Revenue" value="PKR 85M" subtitle="This month" Icon={Icons.DollarSign} color="#8B5CF6" trend="+15.3%" />
+                                    <StatCard title="Active Team" value="17" subtitle="Sales members" Icon={Icons.Users} color="#F59E0B" />
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Offices Tab */}
+                        {activeTab === 'offices' && (
+                            <div>
+                                <div className="flex justify-between items-center mb-6">
+                                    <h2 className="text-2xl font-bold text-gray-800">Office Management</h2>
+                                    <button 
+                                        onClick={openAddOfficeModal}
+                                        className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-semibold flex items-center gap-2 transition"
+                                    >
+                                        <Icons.Plus /> Add Office
+                                    </button>
+                                </div>
+                                <div className="grid gap-6">
+                                    {offices.map(office => (
+                                        <div key={office.office_id} className="bg-white rounded-xl shadow-lg p-6">
+                                            <div className="flex items-start justify-between">
+                                                <div className="flex-1">
+                                                    <h3 className="text-xl font-bold text-gray-800 mb-1">{office.office_name}</h3>
+                                                    <p className="text-gray-600 mb-2">{office.office_address}, {office.office_city}</p>
+                                                    <div className="grid grid-cols-2 gap-4 text-sm mb-3">
+                                                        <div><span className="text-gray-500">📞 Phone:</span> <span className="ml-2">{office.office_phone}</span></div>
+                                                        <div><span className="text-gray-500">📧 Email:</span> <span className="ml-2">{office.office_email}</span></div>
+                                                        <div><span className="text-gray-500">👤 Manager:</span> <span className="ml-2 font-semibold">{office.manager_name}</span></div>
+                                                        <div><span className="text-gray-500">Status:</span> 
+                                                            <span className={`ml-2 px-2 py-1 rounded text-xs font-semibold ${office.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                                                                {office.status}
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                    <div className="flex gap-6 text-sm">
+                                                        <div><span className="text-gray-500">Teams:</span> <span className="ml-2 font-semibold text-blue-600">{office.teams}</span></div>
+                                                        <div><span className="text-gray-500">Leads:</span> <span className="ml-2 font-semibold text-purple-600">{office.leads}</span></div>
+                                                        <div><span className="text-gray-500">Deals:</span> <span className="ml-2 font-semibold text-green-600">{office.deals}</span></div>
+                                                    </div>
+                                                </div>
+                                                <div className="flex gap-2">
+                                                    <button 
+                                                        onClick={() => openEditOfficeModal(office)}
+                                                        className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition"
+                                                        title="Edit Office"
+                                                    >
+                                                        <Icons.Edit />
+                                                    </button>
+                                                    <button 
+                                                        onClick={() => handleDeleteOffice(office.office_id)}
+                                                        className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition"
+                                                        title="Delete Office"
+                                                    >
+                                                        <Icons.Trash />
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
                                 </div>
                             </div>
                         )}
@@ -324,73 +366,100 @@
                         {/* Teams Tab */}
                         {activeTab === 'teams' && (
                             <div>
-                                <h2 className="text-2xl font-bold text-gray-800 mb-6">Team Management</h2>
+                                <div className="flex justify-between items-center mb-6">
+                                    <h2 className="text-2xl font-bold text-gray-800">Team Management</h2>
+                                    <button 
+                                        onClick={openAddTeamModal}
+                                        className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg font-semibold flex items-center gap-2 transition"
+                                    >
+                                        <Icons.Plus /> Add Team Member
+                                    </button>
+                                </div>
                                 <div className="bg-white rounded-xl shadow-lg overflow-hidden">
-                                    <table className="w-full">
-                                        <thead className="bg-gray-100 border-b">
-                                            <tr>
-                                                <th className="text-left p-4 font-semibold text-gray-700">Name</th>
-                                                <th className="text-left p-4 font-semibold text-gray-700">Role</th>
-                                                <th className="text-left p-4 font-semibold text-gray-700">Office</th>
-                                                <th className="text-left p-4 font-semibold text-gray-700">Phone</th>
-                                                <th className="text-center p-4 font-semibold text-gray-700">Daily Limit</th>
-                                                <th className="text-center p-4 font-semibold text-gray-700">Assigned</th>
-                                                <th className="text-center p-4 font-semibold text-gray-700">Deals</th>
-                                                <th className="text-center p-4 font-semibold text-gray-700">Conversion</th>
-                                                <th className="text-center p-4 font-semibold text-gray-700">Revenue</th>
-                                                <th className="text-center p-4 font-semibold text-gray-700">Status</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {teams.map(team => (
-                                                <tr key={team.user_id} className="border-b hover:bg-gray-50">
-                                                    <td className="p-4">
-                                                        <p className="font-semibold text-gray-800">{team.name}</p>
-                                                        <p className="text-xs text-gray-500">{team.email}</p>
-                                                    </td>
-                                                    <td className="p-4">{getRoleBadge(team.role)}</td>
-                                                    <td className="p-4 text-gray-600">{team.office_name}</td>
-                                                    <td className="p-4 text-gray-600">{team.phone}</td>
-                                                    {/* ✅ NEW: Daily Limit Column */}
-                                                    <td className="p-4 text-center">
-                                                        <span className="px-3 py-1 rounded-full bg-purple-100 text-purple-700 font-semibold text-sm">
-                                                            {team.assigned_leads_count % team.daily_leads_limit}/{team.daily_leads_limit}
-                                                        </span>
-                                                    </td>
-                                                    <td className="p-4 text-center">
-                                                        <span className="px-3 py-1 rounded-full bg-blue-100 text-blue-700 font-semibold text-sm">
-                                                            {team.assigned_leads_count}
-                                                        </span>
-                                                    </td>
-                                                    <td className="p-4 text-center">
-                                                        <span className="px-3 py-1 rounded-full bg-green-100 text-green-700 font-semibold text-sm">
-                                                            {team.converted_deals_count}
-                                                        </span>
-                                                    </td>
-                                                    <td className="p-4 text-center">
-                                                        <span className={`px-3 py-1 rounded-full font-semibold text-sm ${
-                                                            getConversionRate(team.converted_deals_count, team.assigned_leads_count) >= 35 ? 'bg-green-100 text-green-700' :
-                                                            getConversionRate(team.converted_deals_count, team.assigned_leads_count) >= 30 ? 'bg-yellow-100 text-yellow-700' :
-                                                            'bg-red-100 text-red-700'
-                                                        }`}>
-                                                            {getConversionRate(team.converted_deals_count, team.assigned_leads_count)}%
-                                                        </span>
-                                                    </td>
-                                                    {/* ✅ NEW: Revenue Column */}
-                                                    <td className="p-4 text-center text-sm font-semibold text-gray-700">
-                                                        {formatCurrency(team.total_revenue)}
-                                                    </td>
-                                                    <td className="p-4 text-center">
-                                                        <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                                                            team.is_active ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
-                                                        }`}>
-                                                            {team.is_active ? 'Active' : 'Inactive'}
-                                                        </span>
-                                                    </td>
+                                    <div className="overflow-x-auto">
+                                        <table className="w-full">
+                                            <thead className="bg-gray-100 border-b">
+                                                <tr>
+                                                    <th className="text-left p-4 font-semibold text-gray-700">Name</th>
+                                                    <th className="text-left p-4 font-semibold text-gray-700">Role</th>
+                                                    <th className="text-left p-4 font-semibold text-gray-700">Office</th>
+                                                    <th className="text-left p-4 font-semibold text-gray-700">Phone</th>
+                                                    <th className="text-center p-4 font-semibold text-gray-700">Daily Limit</th>
+                                                    <th className="text-center p-4 font-semibold text-gray-700">Assigned</th>
+                                                    <th className="text-center p-4 font-semibold text-gray-700">Deals</th>
+                                                    <th className="text-center p-4 font-semibold text-gray-700">Conversion</th>
+                                                    <th className="text-center p-4 font-semibold text-gray-700">Revenue</th>
+                                                    <th className="text-center p-4 font-semibold text-gray-700">Status</th>
+                                                    <th className="text-center p-4 font-semibold text-gray-700">Actions</th>
                                                 </tr>
-                                            ))}
-                                        </tbody>
-                                    </table>
+                                            </thead>
+                                            <tbody>
+                                                {teams.map(team => (
+                                                    <tr key={team.user_id} className="border-b hover:bg-gray-50">
+                                                        <td className="p-4">
+                                                            <p className="font-semibold text-gray-800">{team.name}</p>
+                                                            <p className="text-xs text-gray-500">{team.email}</p>
+                                                        </td>
+                                                        <td className="p-4">{getRoleBadge(team.role)}</td>
+                                                        <td className="p-4 text-gray-600">{team.office_name}</td>
+                                                        <td className="p-4 text-gray-600">{team.phone}</td>
+                                                        <td className="p-4 text-center">
+                                                            <span className="px-3 py-1 rounded-full bg-purple-100 text-purple-700 font-semibold text-sm">
+                                                                {team.assigned_leads_count % team.daily_leads_limit}/{team.daily_leads_limit}
+                                                            </span>
+                                                        </td>
+                                                        <td className="p-4 text-center">
+                                                            <span className="px-3 py-1 rounded-full bg-blue-100 text-blue-700 font-semibold text-sm">
+                                                                {team.assigned_leads_count}
+                                                            </span>
+                                                        </td>
+                                                        <td className="p-4 text-center">
+                                                            <span className="px-3 py-1 rounded-full bg-green-100 text-green-700 font-semibold text-sm">
+                                                                {team.converted_deals_count}
+                                                            </span>
+                                                        </td>
+                                                        <td className="p-4 text-center">
+                                                            <span className={`px-3 py-1 rounded-full font-semibold text-sm ${
+                                                                getConversionRate(team.converted_deals_count, team.assigned_leads_count) >= 35 ? 'bg-green-100 text-green-700' :
+                                                                getConversionRate(team.converted_deals_count, team.assigned_leads_count) >= 30 ? 'bg-yellow-100 text-yellow-700' :
+                                                                'bg-red-100 text-red-700'
+                                                            }`}>
+                                                                {getConversionRate(team.converted_deals_count, team.assigned_leads_count)}%
+                                                            </span>
+                                                        </td>
+                                                        <td className="p-4 text-center text-sm font-semibold text-gray-700">
+                                                            {formatCurrency(team.total_revenue)}
+                                                        </td>
+                                                        <td className="p-4 text-center">
+                                                            <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                                                                team.is_active ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+                                                            }`}>
+                                                                {team.is_active ? 'Active' : 'Inactive'}
+                                                            </span>
+                                                        </td>
+                                                        <td className="p-4 text-center">
+                                                            <div className="flex gap-2 justify-center">
+                                                                <button 
+                                                                    onClick={() => openEditTeamModal(team)}
+                                                                    className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition"
+                                                                    title="Edit"
+                                                                >
+                                                                    <Icons.Edit />
+                                                                </button>
+                                                                <button 
+                                                                    onClick={() => handleDeleteTeam(team.user_id)}
+                                                                    className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition"
+                                                                    title="Delete"
+                                                                >
+                                                                    <Icons.Trash />
+                                                                </button>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
                                 </div>
                             </div>
                         )}
@@ -400,109 +469,63 @@
                             <div>
                                 <h2 className="text-2xl font-bold text-gray-800 mb-6">Lead Management</h2>
                                 <div className="bg-white rounded-xl shadow-lg overflow-hidden">
-                                    <table className="w-full">
-                                        <thead className="bg-gray-100 border-b">
-                                            <tr>
-                                                <th className="text-left p-4 font-semibold text-gray-700">Lead ID</th>
-                                                <th className="text-left p-4 font-semibold text-gray-700">Customer</th>
-                                                <th className="text-left p-4 font-semibold text-gray-700">WhatsApp</th>
-                                                <th className="text-left p-4 font-semibold text-gray-700">Assigned To</th>
-                                                <th className="text-left p-4 font-semibold text-gray-700">Requirements</th>
-                                                <th className="text-center p-4 font-semibold text-gray-700">Priority</th>
-                                                <th className="text-center p-4 font-semibold text-gray-700">Age</th>
-                                                <th className="text-center p-4 font-semibold text-gray-700">Status</th>
-                                                <th className="text-center p-4 font-semibold text-gray-700">Actions</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {leads.map(lead => (
-                                                <tr key={lead.lead_id} className="border-b hover:bg-gray-50">
-                                                    <td className="p-4 font-semibold text-gray-800">#{lead.lead_id}</td>
-                                                    {/* ✅ NEW: Customer name with source */}
-                                                    <td className="p-4">
-                                                        <p className="font-semibold text-gray-800">{lead.customer_name}</p>
-                                                        <p className="text-xs text-gray-500">
-                                                            {lead.source === 'whatsapp' && '💬 WhatsApp'}
-                                                            {lead.source === 'website' && '🌐 Website'}
-                                                            {lead.source === 'referral' && '👥 Referral'}
-                                                        </p>
-                                                    </td>
-                                                    <td className="p-4 text-gray-600">{lead.wa_number}</td>
-                                                    <td className="p-4 text-gray-600">{lead.assigned_to_name}</td>
-                                                    {/* ✅ EXPANDED: More details */}
-                                                    <td className="p-4">
-                                                        <div className="text-xs text-gray-600 space-y-1">
-                                                            <p>✈️ {lead.departure_airport} • {lead.duration_days} days</p>
-                                                            <p>📅 {lead.preferred_month}</p>
-                                                            <p>👥 {lead.number_of_persons} persons</p>
-                                                            <p>💰 {formatCurrency(lead.budget_per_person)}/person</p>
-                                                        </div>
-                                                    </td>
-                                                    {/* ✅ NEW: Priority badge */}
-                                                    <td className="p-4 text-center">
-                                                        {getPriorityBadge(lead.priority)}
-                                                    </td>
-                                                    {/* ✅ NEW: Lead age */}
-                                                    <td className="p-4 text-center">
-                                                        <div className="text-xs">
-                                                            <p className="font-semibold text-gray-700">{getLeadAge(lead.created_at)}</p>
-                                                            {lead.last_contact_date && (
-                                                                <p className="text-gray-500 mt-1">
-                                                                    Last: {getLeadAge(lead.last_contact_date)}
-                                                                </p>
-                                                            )}
-                                                        </div>
-                                                    </td>
-                                                    <td className="p-4 text-center">
-                                                        {getStatusBadge(lead.status)}
-                                                    </td>
-                                                    <td className="p-4 text-center">
-                                                        <button className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg">
-                                                            <Icons.Eye />
-                                                        </button>
-                                                    </td>
+                                    <div className="overflow-x-auto">
+                                        <table className="w-full">
+                                            <thead className="bg-gray-100 border-b">
+                                                <tr>
+                                                    <th className="text-left p-4 font-semibold text-gray-700">Lead ID</th>
+                                                    <th className="text-left p-4 font-semibold text-gray-700">Customer</th>
+                                                    <th className="text-left p-4 font-semibold text-gray-700">WhatsApp</th>
+                                                    <th className="text-left p-4 font-semibold text-gray-700">Assigned To</th>
+                                                    <th className="text-left p-4 font-semibold text-gray-700">Requirements</th>
+                                                    <th className="text-center p-4 font-semibold text-gray-700">Priority</th>
+                                                    <th className="text-center p-4 font-semibold text-gray-700">Age</th>
+                                                    <th className="text-center p-4 font-semibold text-gray-700">Status</th>
+                                                    <th className="text-center p-4 font-semibold text-gray-700">Actions</th>
                                                 </tr>
-                                            ))}
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-                        )}
-
-                        {/* Offices Tab */}
-                        {activeTab === 'offices' && (
-                            <div>
-                                <h2 className="text-2xl font-bold text-gray-800 mb-6">Office Management</h2>
-                                <div className="grid gap-6">
-                                    {offices.map(office => (
-                                        <div key={office.office_id} className="bg-white rounded-xl shadow-lg p-6">
-                                            <div className="flex items-start justify-between">
-                                                <div>
-                                                    <h3 className="text-xl font-bold text-gray-800 mb-1">{office.office_name}</h3>
-                                                    <p className="text-gray-600">{office.office_address}</p>
-                                                    <div className="flex gap-4 mt-4 text-sm">
-                                                        <div>
-                                                            <span className="text-gray-500">Teams:</span>
-                                                            <span className="ml-2 font-semibold text-blue-600">{office.teams}</span>
-                                                        </div>
-                                                        <div>
-                                                            <span className="text-gray-500">Leads:</span>
-                                                            <span className="ml-2 font-semibold text-purple-600">{office.leads}</span>
-                                                        </div>
-                                                        <div>
-                                                            <span className="text-gray-500">Deals:</span>
-                                                            <span className="ml-2 font-semibold text-green-600">{office.deals}</span>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                                                    office.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
-                                                }`}>
-                                                    {office.status}
-                                                </span>
-                                            </div>
-                                        </div>
-                                    ))}
+                                            </thead>
+                                            <tbody>
+                                                {leads.map(lead => (
+                                                    <tr key={lead.lead_id} className="border-b hover:bg-gray-50">
+                                                        <td className="p-4 font-semibold text-gray-800">#{lead.lead_id}</td>
+                                                        <td className="p-4">
+                                                            <p className="font-semibold text-gray-800">{lead.customer_name}</p>
+                                                            <p className="text-xs text-gray-500">
+                                                                {lead.source === 'whatsapp' && '💬 WhatsApp'}
+                                                                {lead.source === 'website' && '🌐 Website'}
+                                                                {lead.source === 'referral' && '👥 Referral'}
+                                                            </p>
+                                                        </td>
+                                                        <td className="p-4 text-gray-600">{lead.wa_number}</td>
+                                                        <td className="p-4 text-gray-600">{lead.assigned_to_name}</td>
+                                                        <td className="p-4">
+                                                            <div className="text-xs text-gray-600 space-y-1">
+                                                                <p>✈️ {lead.departure_airport} • {lead.duration_days} days</p>
+                                                                <p>📅 {lead.preferred_month}</p>
+                                                                <p>👥 {lead.number_of_persons} persons</p>
+                                                                <p>💰 {formatCurrency(lead.budget_per_person)}/person</p>
+                                                            </div>
+                                                        </td>
+                                                        <td className="p-4 text-center">{getPriorityBadge(lead.priority)}</td>
+                                                        <td className="p-4 text-center">
+                                                            <div className="text-xs">
+                                                                <p className="font-semibold text-gray-700">{getLeadAge(lead.created_at)}</p>
+                                                                {lead.last_contact_date && (
+                                                                    <p className="text-gray-500 mt-1">Last: {getLeadAge(lead.last_contact_date)}</p>
+                                                                )}
+                                                            </div>
+                                                        </td>
+                                                        <td className="p-4 text-center">{getStatusBadge(lead.status)}</td>
+                                                        <td className="p-4 text-center">
+                                                            <button className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg">
+                                                                <Icons.Eye />
+                                                            </button>
+                                                        </td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
                                 </div>
                             </div>
                         )}
@@ -517,6 +540,173 @@
                             </div>
                         )}
                     </div>
+
+                    {/* Office Modal */}
+                    {officeModalOpen && (
+                        <div className="modal active" onClick={() => setOfficeModalOpen(false)}>
+                            <div className="bg-white rounded-2xl max-w-2xl w-full mx-4" onClick={(e) => e.stopPropagation()}>
+                                <div className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-6 py-4 rounded-t-2xl">
+                                    <h2 className="text-xl font-bold">{editingOffice ? 'Edit Office' : 'Add New Office'}</h2>
+                                </div>
+                                <form onSubmit={handleSaveOffice} className="p-6">
+                                    <div className="grid grid-cols-2 gap-4 mb-4">
+                                        <div className="col-span-2">
+                                            <label className="block text-sm font-medium text-gray-700 mb-1">Office Name *</label>
+                                            <input type="text" name="office_name" required defaultValue={editingOffice?.office_name}
+                                                   className="w-full border border-gray-300 rounded-lg px-3 py-2" />
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 mb-1">City *</label>
+                                            <select name="office_city" required defaultValue={editingOffice?.office_city}
+                                                    className="w-full border border-gray-300 rounded-lg px-3 py-2">
+                                                <option value="">Select City</option>
+                                                <option value="Karachi">Karachi</option>
+                                                <option value="Lahore">Lahore</option>
+                                                <option value="Islamabad">Islamabad</option>
+                                                <option value="Faisalabad">Faisalabad</option>
+                                                <option value="Multan">Multan</option>
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 mb-1">Manager Name *</label>
+                                            <input type="text" name="manager_name" required defaultValue={editingOffice?.manager_name}
+                                                   className="w-full border border-gray-300 rounded-lg px-3 py-2" />
+                                        </div>
+                                        <div className="col-span-2">
+                                            <label className="block text-sm font-medium text-gray-700 mb-1">Address *</label>
+                                            <input type="text" name="office_address" required defaultValue={editingOffice?.office_address}
+                                                   className="w-full border border-gray-300 rounded-lg px-3 py-2" />
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 mb-1">Phone *</label>
+                                            <input type="text" name="office_phone" required defaultValue={editingOffice?.office_phone}
+                                                   className="w-full border border-gray-300 rounded-lg px-3 py-2" 
+                                                   placeholder="+92-XX-XXXXXXX" />
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 mb-1">Email *</label>
+                                            <input type="email" name="office_email" required defaultValue={editingOffice?.office_email}
+                                                   className="w-full border border-gray-300 rounded-lg px-3 py-2" />
+                                        </div>
+                                        <div className="col-span-2">
+                                            <label className="block text-sm font-medium text-gray-700 mb-2">Status *</label>
+                                            <div className="flex gap-4">
+                                                <label className="flex items-center">
+                                                    <input type="radio" name="status" value="active" 
+                                                           defaultChecked={!editingOffice || editingOffice.status === 'active'}
+                                                           className="mr-2" />
+                                                    <span>Active</span>
+                                                </label>
+                                                <label className="flex items-center">
+                                                    <input type="radio" name="status" value="inactive" 
+                                                           defaultChecked={editingOffice?.status === 'inactive'}
+                                                           className="mr-2" />
+                                                    <span>Inactive</span>
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div className="flex justify-end gap-3 pt-4 border-t">
+                                        <button type="button" onClick={() => setOfficeModalOpen(false)}
+                                                className="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
+                                            Cancel
+                                        </button>
+                                        <button type="submit"
+                                                className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold">
+                                            {editingOffice ? 'Update Office' : 'Add Office'}
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Team Modal */}
+                    {teamModalOpen && (
+                        <div className="modal active" onClick={() => setTeamModalOpen(false)}>
+                            <div className="bg-white rounded-2xl max-w-2xl w-full mx-4" onClick={(e) => e.stopPropagation()}>
+                                <div className="bg-gradient-to-r from-green-600 to-emerald-600 text-white px-6 py-4 rounded-t-2xl">
+                                    <h2 className="text-xl font-bold">{editingTeam ? 'Edit Team Member' : 'Add New Team Member'}</h2>
+                                </div>
+                                <form onSubmit={handleSaveTeam} className="p-6">
+                                    <div className="grid grid-cols-2 gap-4 mb-4">
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 mb-1">Full Name *</label>
+                                            <input type="text" name="name" required defaultValue={editingTeam?.name}
+                                                   className="w-full border border-gray-300 rounded-lg px-3 py-2" />
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 mb-1">Email *</label>
+                                            <input type="email" name="email" required defaultValue={editingTeam?.email}
+                                                   className="w-full border border-gray-300 rounded-lg px-3 py-2" />
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 mb-1">Phone / WhatsApp *</label>
+                                            <input type="text" name="phone" required defaultValue={editingTeam?.phone}
+                                                   className="w-full border border-gray-300 rounded-lg px-3 py-2" 
+                                                   placeholder="+92-3XX-XXXXXXX" />
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 mb-1">Role *</label>
+                                            <select name="role" required defaultValue={editingTeam?.role}
+                                                    className="w-full border border-gray-300 rounded-lg px-3 py-2">
+                                                <option value="">Select Role</option>
+                                                <option value="admin">Admin</option>
+                                                <option value="manager">Manager</option>
+                                                <option value="sales">Sales</option>
+                                                <option value="support">Support</option>
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 mb-1">Office *</label>
+                                            <select name="office_id" required defaultValue={editingTeam?.office_id}
+                                                    className="w-full border border-gray-300 rounded-lg px-3 py-2">
+                                                <option value="">Select Office</option>
+                                                {offices.map(office => (
+                                                    <option key={office.office_id} value={office.office_id}>
+                                                        {office.office_name}
+                                                    </option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 mb-1">Daily Leads Limit *</label>
+                                            <input type="number" name="daily_leads_limit" required min="1" max="100"
+                                                   defaultValue={editingTeam?.daily_leads_limit || 10}
+                                                   className="w-full border border-gray-300 rounded-lg px-3 py-2" />
+                                        </div>
+                                        <div className="col-span-2">
+                                            <label className="block text-sm font-medium text-gray-700 mb-2">Status *</label>
+                                            <div className="flex gap-4">
+                                                <label className="flex items-center">
+                                                    <input type="radio" name="is_active" value="true" 
+                                                           defaultChecked={!editingTeam || editingTeam.is_active}
+                                                           className="mr-2" />
+                                                    <span>Active</span>
+                                                </label>
+                                                <label className="flex items-center">
+                                                    <input type="radio" name="is_active" value="false" 
+                                                           defaultChecked={editingTeam && !editingTeam.is_active}
+                                                           className="mr-2" />
+                                                    <span>Inactive</span>
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div className="flex justify-end gap-3 pt-4 border-t">
+                                        <button type="button" onClick={() => setTeamModalOpen(false)}
+                                                className="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
+                                            Cancel
+                                        </button>
+                                        <button type="submit"
+                                                className="px-6 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold">
+                                            {editingTeam ? 'Update Member' : 'Add Member'}
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    )}
                 </div>
             );
         }
