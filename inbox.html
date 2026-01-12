@@ -4,23 +4,19 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Team Inbox - Umrah System</title>
-    
+
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    
+
     <!-- React & ReactDOM -->
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-    
+
     <!-- Babel for JSX -->
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    
+
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
             direction: rtl;
@@ -29,13 +25,36 @@
 </head>
 <body>
     <div id="root"></div>
-    
+
     <script type="text/babel">
         const { useState, useEffect } = React;
-        
-        // ⚙️ CONFIGURATION
-        const API_URL = 'https://api.umrahflex.com';
-        
+
+        // =========================
+        // ✅ API CONFIG
+        // =========================
+        // Recommended when frontend is served from same server/domain:
+        const API_BASE = '/api';
+
+        // If your packages page is using this and it works, use it here too:
+        // const API_BASE = 'http://localhost:3000/api';
+
+        async function apiFetch(path, options = {}) {
+            const res = await fetch(`${API_BASE}${path}`, {
+                headers: { 'Content-Type': 'application/json', ...(options.headers || {}) },
+                ...options
+            });
+
+            const text = await res.text();
+            let data;
+            try { data = text ? JSON.parse(text) : null; } catch { data = text; }
+
+            if (!res.ok) {
+                const msg = (data && data.error) ? data.error : (data || `HTTP ${res.status}`);
+                throw new Error(msg);
+            }
+            return data;
+        }
+
         // Simple Icons
         const Icons = {
             MessageCircle: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>,
@@ -55,88 +74,71 @@
 
             // Parse URL parameters
             const urlParams = new URLSearchParams(window.location.search);
-            const token = urlParams.get('t');
-            const conversationId = window.location.pathname.split('/').pop();
+
+            // ✅ Best practice: open page like:
+            // inbox.html?id=123
+            const leadIdFromQuery = urlParams.get('id') || urlParams.get('lead_id');
+
+            // fallback: last path segment
+            const lastSeg = window.location.pathname.split('/').filter(Boolean).pop();
+            const leadIdFromPath = (lastSeg && /^\d+$/.test(lastSeg)) ? lastSeg : null;
+
+            const leadId = leadIdFromQuery || leadIdFromPath;
 
             useEffect(() => {
                 loadConversation();
+                // eslint-disable-next-line
             }, []);
 
             const loadConversation = async () => {
                 try {
                     setLoading(true);
-                    
-                    // ✅ UPDATED DEMO DATA - MATCHES DATABASE SCHEMA
-                    const mockData = {
-                        // Lead info
-                        lead_id: 123,
-                        wa_number: '+92-300-1234567',
-                        customer_name: 'علی احمد',           // ✅ ADDED
-                        
-                        // Status - ✅ CORRECT VALUES ONLY
-                        status: 'contacted',  // new | contacted | negotiating | deal_done | follow_up | lost | cancelled
-                        priority: 'high',     // ✅ ADDED
-                        
-                        // Assignment
-                        assigned_to: 2,
-                        assigned_to_name: 'فاطمہ خان',
-                        assigned_office: 1,
-                        
-                        // Conversation
-                        conversation_id: 456,              // ✅ ADDED
-                        is_complete: true,
-                        
-                        // Travel details - ✅ CORRECT DATA TYPES
-                        departure_airport: 'Karachi',
-                        preferred_month: 'Ramadan',
-                        duration_days: 14,                 // ✅ Integer not string
-                        number_of_persons: 4,              // ✅ Integer not range
-                        
-                        // Person breakdown - ✅ ADDED
-                        adult_males: 2,
-                        adult_females: 2,
-                        children_with_bed: 0,
-                        children_without_bed: 0,
-                        infants: 0,
-                        
-                        // Budget - ✅ SINGLE VALUE
-                        budget_per_person: 180000,         // ✅ Not range
-                        budget_currency: 'PKR',
-                        hotel_distance_preference: 'walking_distance', // ✅ Not meters
-                        room_sharing_preference: 'family',
-                        
-                        // Timestamps - ✅ ADDED
-                        created_at: '2026-01-12T10:30:00Z',
-                        last_contact_date: '2026-01-12T14:20:00Z',
-                        
-                        // Additional
-                        source: 'whatsapp',
-                        notes: 'رمضان میں سفر کرنا چاہتے ہیں',
-                        
-                        // Messages (from messages table)
-                        messages: [
-                            { message_id: 1, sender_type: 'bot', message_text: 'السلام علیکم! آپ کس ایئرپورٹ سے سفر کریں گے؟', created_at: '10:30' },
-                            { message_id: 2, sender_type: 'customer', message_text: 'Karachi', created_at: '10:31' },
-                            { message_id: 3, sender_type: 'bot', message_text: 'حرم مکہ سے کتنے فاصلے پر ہوٹل چاہیے؟', created_at: '10:31' },
-                            { message_id: 4, sender_type: 'customer', message_text: 'Walking distance', created_at: '10:32' },
-                            { message_id: 5, sender_type: 'bot', message_text: 'فی شخص آپ کا بجٹ کیا ہے؟ (PKR)', created_at: '10:32' },
-                            { message_id: 6, sender_type: 'customer', message_text: '180000', created_at: '10:33' },
-                            { message_id: 7, sender_type: 'bot', message_text: 'کل کتنے افراد سفر کریں گے؟', created_at: '10:33' },
-                            { message_id: 8, sender_type: 'customer', message_text: '4', created_at: '10:34' },
-                            { message_id: 9, sender_type: 'bot', message_text: 'براہ کرم تفصیل بتائیں:\nمثال: 2 بالغ، 1 بچہ', created_at: '10:34' },
-                            { message_id: 10, sender_type: 'customer', message_text: '2 بالغ مرد، 2 بالغ خواتین', created_at: '10:35' },
-                            { message_id: 11, sender_type: 'bot', message_text: 'آپ کب سفر کرنا چاہتے ہیں؟', created_at: '10:35' },
-                            { message_id: 12, sender_type: 'customer', message_text: 'Ramadan', created_at: '10:36' },
-                            { message_id: 13, sender_type: 'bot', message_text: 'کتنے دن کا پیکج چاہیے؟', created_at: '10:36' },
-                            { message_id: 14, sender_type: 'customer', message_text: '14', created_at: '10:37' },
-                            { message_id: 15, sender_type: 'bot', message_text: '✅ شکریہ! آپ کی معلومات ہماری ٹیم کو بھیج دی گئی ہیں۔', created_at: '10:38' }
-                        ]
-                    };
-                    
-                    setConversation(mockData);
+                    setError(null);
+
+                    if (!leadId) {
+                        throw new Error('Lead ID نہیں ملا۔ براہ کرم URL میں ?id=123 دیں');
+                    }
+
+                    // Try a few patterns (backend may support any one)
+                    let lead = null;
+
+                    // 1) /leads/:id (if exists)
+                    try {
+                        lead = await apiFetch(`/leads/${leadId}`);
+                    } catch (e) {
+                        // ignore and fallback
+                    }
+
+                    // 2) /leads?lead_id=...
+                    if (!lead) {
+                        try {
+                            const data = await apiFetch(`/leads?lead_id=${encodeURIComponent(leadId)}`);
+                            if (Array.isArray(data)) lead = data[0] || null;
+                            else if (data && Array.isArray(data.leads)) lead = data.leads[0] || null;
+                            else if (data && data.lead_id) lead = data;
+                        } catch (e) {
+                            // ignore and fallback
+                        }
+                    }
+
+                    // 3) /leads (list) and find
+                    if (!lead) {
+                        const data = await apiFetch('/leads');
+                        const list = Array.isArray(data) ? data : (data?.leads || []);
+                        lead = list.find(x => String(x.lead_id) === String(leadId)) || null;
+                    }
+
+                    if (!lead) throw new Error('Lead نہیں ملا');
+
+                    // Messages:
+                    // اگر backend lead object میں messages دے رہا ہے تو use کر لیں
+                    // ورنہ empty list show ہوگی
+                    const messages = Array.isArray(lead.messages) ? lead.messages : [];
+
+                    setConversation({ ...lead, messages });
                     setLoading(false);
                 } catch (err) {
-                    setError('ڈیٹا لوڈ نہیں ہو سکا');
+                    setError(err.message || 'ڈیٹا لوڈ نہیں ہو سکا');
                     setLoading(false);
                 }
             };
@@ -152,30 +154,29 @@
                     'cancelled': 'منسوخ'
                 };
 
-                if (!confirm(`کیا آپ status کو "${statusLabels[newStatus]}" میں تبدیل کرنا چاہتے ہیں؟`)) {
-                    return;
-                }
+                if (!confirm(`کیا آپ status کو "${statusLabels[newStatus]}" میں تبدیل کرنا چاہتے ہیں؟`)) return;
 
                 try {
                     setUpdating(true);
-                    
-                    // API call would go here
-                    // await fetch(`${API_URL}/api/leads/${conversation.lead_id}/status`, {
-                    //     method: 'PATCH',
-                    //     body: JSON.stringify({ status: newStatus })
-                    // });
-                    
-                    // Update local state
+
+                    // ✅ REAL API PATCH
+                    const updated = await apiFetch(`/leads/${conversation.lead_id}/status`, {
+                        method: 'PATCH',
+                        body: JSON.stringify({ status: newStatus })
+                    });
+
+                    // Some backends return updated lead, some return {success:true}
                     setConversation(prev => ({
                         ...prev,
+                        ...(updated && typeof updated === 'object' ? updated : {}),
                         status: newStatus,
                         last_contact_date: new Date().toISOString()
                     }));
-                    
+
                     alert(`✅ Status ${statusLabels[newStatus]} میں update ہو گیا!`);
                     setUpdating(false);
                 } catch (err) {
-                    alert('❌ Status update نہیں ہو سکا');
+                    alert('❌ ' + (err.message || 'Status update نہیں ہو سکا'));
                     setUpdating(false);
                 }
             };
@@ -190,7 +191,7 @@
                     lost: { bg: 'bg-red-100', text: 'text-red-700', label: '❌ Lost' },
                     cancelled: { bg: 'bg-gray-100', text: 'text-gray-700', label: '🚫 منسوخ' }
                 };
-                
+
                 const badge = badges[status] || badges.new;
                 return (
                     <span className={`px-3 py-1 rounded-full text-sm font-semibold ${badge.bg} ${badge.text}`}>
@@ -206,7 +207,7 @@
                     medium: { bg: 'bg-blue-500', text: 'text-white', label: '📌 Medium' },
                     low: { bg: 'bg-gray-500', text: 'text-white', label: '📋 Low' }
                 };
-                
+
                 const badge = badges[priority] || badges.medium;
                 return (
                     <span className={`px-2 py-1 rounded text-xs font-semibold ${badge.bg} ${badge.text}`}>
@@ -215,15 +216,16 @@
                 );
             };
 
-            const formatCurrency = (amount) => {
-                return `PKR ${amount.toLocaleString()}`;
+            const formatCurrency = (amount, currency='PKR') => {
+                if (amount == null || amount === '') return '-';
+                try { return `${currency} ${Number(amount).toLocaleString()}`; } catch { return `${currency} ${amount}`; }
             };
 
             const getLeadAge = (created_at) => {
+                if (!created_at) return '';
                 const now = new Date();
                 const created = new Date(created_at);
                 const hours = Math.floor((now - created) / (1000 * 60 * 60));
-                
                 if (hours < 1) return 'ابھی ابھی';
                 if (hours < 24) return `${hours} گھنٹے پہلے`;
                 const days = Math.floor(hours / 24);
@@ -248,6 +250,12 @@
                             <div className="text-red-500 text-6xl mb-4">⚠️</div>
                             <h2 className="text-2xl font-bold text-gray-800 mb-2">خرابی!</h2>
                             <p className="text-gray-600">{error}</p>
+                            <button
+                                onClick={loadConversation}
+                                className="mt-4 bg-gray-800 text-white px-4 py-2 rounded-lg"
+                            >
+                                دوبارہ لوڈ کریں
+                            </button>
                         </div>
                     </div>
                 );
@@ -264,7 +272,9 @@
                                         <Icons.MessageCircle />
                                         Team Inbox
                                     </h1>
-                                    <p className="text-green-100 text-sm">Lead ID: #{conversation.lead_id} • {getLeadAge(conversation.created_at)}</p>
+                                    <p className="text-green-100 text-sm">
+                                        Lead ID: #{conversation.lead_id} {conversation.created_at ? `• ${getLeadAge(conversation.created_at)}` : ''}
+                                    </p>
                                 </div>
                                 <div className="text-right">
                                     {getPriorityBadge(conversation.priority)}
@@ -288,20 +298,20 @@
                                     <div className="space-y-3">
                                         <div>
                                             <p className="text-gray-500 text-sm">نام</p>
-                                            <p className="font-semibold text-lg">{conversation.customer_name}</p>
+                                            <p className="font-semibold text-lg">{conversation.customer_name || '-'}</p>
                                         </div>
                                         <div>
                                             <p className="text-gray-500 text-sm">WhatsApp</p>
-                                            <p className="font-semibold text-blue-600">{conversation.wa_number}</p>
+                                            <p className="font-semibold text-blue-600">{conversation.wa_number || conversation.phone || '-'}</p>
                                         </div>
                                         <div>
                                             <p className="text-gray-500 text-sm">Assigned To</p>
-                                            <p className="font-semibold">{conversation.assigned_to_name}</p>
+                                            <p className="font-semibold">{conversation.assigned_to_name || conversation.assigned_to || '-'}</p>
                                         </div>
                                         <div>
                                             <p className="text-gray-500 text-sm">Source</p>
                                             <span className="inline-flex items-center gap-1 text-sm bg-green-100 text-green-700 px-2 py-1 rounded">
-                                                💬 {conversation.source}
+                                                💬 {conversation.source || '-'}
                                             </span>
                                         </div>
                                     </div>
@@ -313,37 +323,39 @@
                                     <div className="space-y-2 text-sm">
                                         <div className="flex justify-between items-center py-2 border-b">
                                             <span className="text-gray-600">ایئرپورٹ</span>
-                                            <span className="font-semibold">{conversation.departure_airport}</span>
+                                            <span className="font-semibold">{conversation.departure_airport || '-'}</span>
                                         </div>
                                         <div className="flex justify-between items-center py-2 border-b">
                                             <span className="text-gray-600">مہینہ</span>
-                                            <span className="font-semibold">{conversation.preferred_month}</span>
+                                            <span className="font-semibold">{conversation.preferred_month || conversation.islamic_month || '-'}</span>
                                         </div>
                                         <div className="flex justify-between items-center py-2 border-b">
                                             <span className="text-gray-600">دورانیہ</span>
-                                            <span className="font-semibold">{conversation.duration_days} دن</span>
+                                            <span className="font-semibold">{conversation.duration_days != null ? `${conversation.duration_days} دن` : '-'}</span>
                                         </div>
                                         <div className="flex justify-between items-center py-2 border-b">
                                             <span className="text-gray-600">افراد</span>
-                                            <span className="font-semibold">{conversation.number_of_persons} افراد</span>
+                                            <span className="font-semibold">{conversation.number_of_persons != null ? `${conversation.number_of_persons} افراد` : '-'}</span>
                                         </div>
                                         <div className="flex justify-between items-center py-2 border-b">
                                             <span className="text-gray-600">تفصیل</span>
                                             <span className="font-semibold text-xs">
-                                                {conversation.adult_males}M, {conversation.adult_females}F
+                                                {(conversation.adult_males ?? 0)}M, {(conversation.adult_females ?? 0)}F
                                             </span>
                                         </div>
                                         <div className="flex justify-between items-center py-2 border-b">
                                             <span className="text-gray-600">بجٹ</span>
-                                            <span className="font-semibold">{formatCurrency(conversation.budget_per_person)}/person</span>
+                                            <span className="font-semibold">
+                                                {formatCurrency(conversation.budget_per_person, conversation.budget_currency || 'PKR')}/person
+                                            </span>
                                         </div>
                                         <div className="flex justify-between items-center py-2 border-b">
                                             <span className="text-gray-600">ہوٹل فاصلہ</span>
-                                            <span className="font-semibold">{conversation.hotel_distance_preference}</span>
+                                            <span className="font-semibold">{conversation.hotel_distance_preference || '-'}</span>
                                         </div>
                                         <div className="flex justify-between items-center py-2">
                                             <span className="text-gray-600">کمرہ</span>
-                                            <span className="font-semibold">{conversation.room_sharing_preference}</span>
+                                            <span className="font-semibold">{conversation.room_sharing_preference || '-'}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -356,7 +368,7 @@
                                     </div>
                                 )}
 
-                                {/* ✅ UPDATED STATUS BUTTONS - CORRECT VALUES */}
+                                {/* Status Buttons */}
                                 <div className="bg-white rounded-2xl shadow-lg p-6">
                                     <h3 className="font-bold text-gray-800 mb-4">📊 Status Update کریں</h3>
                                     <div className="space-y-2">
@@ -368,7 +380,7 @@
                                             <Icons.Phone />
                                             📞 رابطہ ہو گیا
                                         </button>
-                                        
+
                                         <button
                                             onClick={() => updateStatus('negotiating')}
                                             disabled={updating || conversation.status === 'negotiating'}
@@ -376,7 +388,7 @@
                                         >
                                             💬 بات چیت جاری
                                         </button>
-                                        
+
                                         <button
                                             onClick={() => updateStatus('deal_done')}
                                             disabled={updating || conversation.status === 'deal_done'}
@@ -385,7 +397,7 @@
                                             <Icons.UserCheck />
                                             ✅ ڈیل ہو گئی
                                         </button>
-                                        
+
                                         <button
                                             onClick={() => updateStatus('follow_up')}
                                             disabled={updating || conversation.status === 'follow_up'}
@@ -403,7 +415,7 @@
                                             ❌ Lead Lost
                                         </button>
                                     </div>
-                                    
+
                                     {updating && (
                                         <div className="mt-4 text-center text-sm text-gray-600">
                                             <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-green-600 mx-auto mb-2"></div>
@@ -425,27 +437,33 @@
                                             📖 Read-Only Mode - یہ صرف دیکھنے کے لیے ہے
                                         </p>
                                     </div>
-                                    
+
                                     <div className="p-6 space-y-4 max-h-[700px] overflow-y-auto bg-gray-50">
-                                        {conversation.messages.map((msg) => (
-                                            <div
-                                                key={msg.message_id}
-                                                className={`flex ${msg.sender_type === 'customer' ? 'justify-start' : 'justify-end'}`}
-                                            >
-                                                <div
-                                                    className={`max-w-[70%] rounded-2xl px-4 py-3 shadow-md ${
-                                                        msg.sender_type === 'customer'
-                                                            ? 'bg-gradient-to-r from-green-500 to-green-600 text-white rounded-br-none'
-                                                            : 'bg-white text-gray-800 rounded-bl-none border border-gray-200'
-                                                    }`}
-                                                >
-                                                    <p className="text-sm whitespace-pre-wrap leading-relaxed">{msg.message_text}</p>
-                                                    <p className={`text-xs mt-2 ${msg.sender_type === 'customer' ? 'text-green-100' : 'text-gray-400'}`}>
-                                                        {msg.created_at}
-                                                    </p>
-                                                </div>
+                                        {(!conversation.messages || conversation.messages.length === 0) ? (
+                                            <div className="text-center text-sm text-gray-500 py-10">
+                                                Messages ابھی available نہیں (backend میں messages endpoint add ہونے پر یہاں show ہوں گے)
                                             </div>
-                                        ))}
+                                        ) : (
+                                            conversation.messages.map((msg) => (
+                                                <div
+                                                    key={msg.message_id || `${msg.created_at}-${msg.message_text}`}
+                                                    className={`flex ${msg.sender_type === 'customer' ? 'justify-start' : 'justify-end'}`}
+                                                >
+                                                    <div
+                                                        className={`max-w-[70%] rounded-2xl px-4 py-3 shadow-md ${
+                                                            msg.sender_type === 'customer'
+                                                                ? 'bg-gradient-to-r from-green-500 to-green-600 text-white rounded-br-none'
+                                                                : 'bg-white text-gray-800 rounded-bl-none border border-gray-200'
+                                                        }`}
+                                                    >
+                                                        <p className="text-sm whitespace-pre-wrap leading-relaxed">{msg.message_text}</p>
+                                                        <p className={`text-xs mt-2 ${msg.sender_type === 'customer' ? 'text-green-100' : 'text-gray-400'}`}>
+                                                            {msg.created_at}
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            ))
+                                        )}
                                     </div>
 
                                     <div className="bg-gray-100 p-4 border-t border-gray-200">
@@ -456,6 +474,7 @@
                                     </div>
                                 </div>
                             </div>
+
                         </div>
                     </div>
                 </div>
