@@ -1,268 +1,479 @@
 <!DOCTYPE html>
 <html lang="ur" dir="rtl">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Team Inbox - Umrah System</title>
-    
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    
-    <!-- React & ReactDOM -->
-    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-    
-    <!-- Babel for JSX -->
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-            direction: rtl;
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Team Inbox - Umrah System</title>
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- React & ReactDOM -->
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+
+  <!-- Babel for JSX -->
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      direction: rtl;
+    }
+  </style>
 </head>
+
 <body>
-    <div id="root"></div>
-    
-    <script type="text/babel">
-        const { useState, useEffect } = React;
-        
-        // =========================
-        // ✅ CONFIGURATION (VPS + Nginx Proxy)
-        // =========================
-        // IMPORTANT: Frontend must be opened from VPS URL (NOT file:/// or GitHub Pages)
-        // Example: http://77.42.83.42/inbox.html?id=1
-        const API_BASE = '/api';
+  <div id="root"></div>
 
-        async function apiFetch(path, options = {}) {
-            const res = await fetch(`${API_BASE}${path}`, {
-                headers: { 'Content-Type': 'application/json', ...(options.headers || {}) },
-                ...options
-            });
+  <script type="text/babel">
+    const { useState, useEffect } = React;
 
-            const text = await res.text();
-            let data;
-            try { data = text ? JSON.parse(text) : null; } catch { data = text; }
+    // =========================
+    // ✅ CONFIG (VPS Hosting)
+    // =========================
+    // Works when you open frontend like: http://77.42.83.42/inbox.html?id=1
+    // And Nginx proxies /api -> http://127.0.0.1:3000/api
+    const API_BASE = '/api';
 
-            if (!res.ok) {
-                const msg = (data && data.error) ? data.error : (data || `HTTP ${res.status}`);
-                throw new Error(msg);
-            }
-            return data;
+    async function apiFetch(path, options = {}) {
+      const res = await fetch(`${API_BASE}${path}`, {
+        headers: { 'Content-Type': 'application/json', ...(options.headers || {}) },
+        ...options
+      });
+
+      const text = await res.text();
+      let data;
+      try { data = text ? JSON.parse(text) : null; } catch { data = text; }
+
+      if (!res.ok) {
+        const msg = (data && data.error) ? data.error : (data || `HTTP ${res.status}`);
+        throw new Error(msg);
+      }
+      return data;
+    }
+
+    // Simple Icons
+    const Icons = {
+      MessageCircle: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>,
+      Phone: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" /></svg>,
+      Calendar: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>,
+      Users: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg>,
+      UserCheck: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>,
+      AlertCircle: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>,
+      TrendingUp: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" /></svg>,
+    };
+
+    function UmrahInbox() {
+      const [conversation, setConversation] = useState(null);
+      const [loading, setLoading] = useState(true);
+      const [updating, setUpdating] = useState(false);
+      const [error, setError] = useState(null);
+
+      // ✅ Open like: inbox.html?id=123
+      const urlParams = new URLSearchParams(window.location.search);
+      const leadIdFromQuery = urlParams.get('id') || urlParams.get('lead_id');
+
+      // fallback: /inbox/123
+      const lastSeg = window.location.pathname.split('/').filter(Boolean).pop();
+      const leadIdFromPath = (lastSeg && /^\d+$/.test(lastSeg)) ? lastSeg : null;
+
+      const leadId = leadIdFromQuery || leadIdFromPath;
+
+      useEffect(() => {
+        loadConversation();
+      }, []);
+
+      // =========================
+      // ✅ REAL LOAD FROM API
+      // =========================
+      const loadConversation = async () => {
+        try {
+          setLoading(true);
+          setError(null);
+
+          if (!leadId) throw new Error('Lead ID نہیں ملا۔ براہ کرم URL میں ?id=123 دیں');
+
+          let lead = null;
+
+          // 1) /leads/:id
+          try {
+            lead = await apiFetch(`/leads/${leadId}`);
+          } catch (e) {}
+
+          // 2) /leads?lead_id=...
+          if (!lead) {
+            try {
+              const data = await apiFetch(`/leads?lead_id=${encodeURIComponent(leadId)}`);
+              if (Array.isArray(data)) lead = data[0] || null;
+              else if (data && Array.isArray(data.leads)) lead = data.leads[0] || null;
+              else if (data && data.lead_id) lead = data;
+            } catch (e) {}
+          }
+
+          // 3) /leads list and find
+          if (!lead) {
+            const data = await apiFetch('/leads');
+            const list = Array.isArray(data) ? data : (data?.leads || []);
+            lead = list.find(x => String(x.lead_id) === String(leadId)) || null;
+          }
+
+          if (!lead) throw new Error('Lead نہیں ملا');
+
+          // messages (optional)
+          const messages = Array.isArray(lead.messages) ? lead.messages : [];
+
+          setConversation({ ...lead, messages });
+          setLoading(false);
+        } catch (err) {
+          setError(err.message || 'ڈیٹا لوڈ نہیں ہو سکا');
+          setLoading(false);
         }
-        
-        // Simple Icons
-        const Icons = {
-            MessageCircle: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>,
-            Phone: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" /></svg>,
-            Calendar: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>,
-            Users: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg>,
-            UserCheck: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>,
-            AlertCircle: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>,
-            TrendingUp: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" /></svg>,
+      };
+
+      // =========================
+      // ✅ REAL PATCH STATUS
+      // =========================
+      const updateStatus = async (newStatus) => {
+        const statusLabels = {
+          'new': 'نیا',
+          'contacted': 'رابطہ ہو گیا',
+          'negotiating': 'بات چیت جاری',
+          'deal_done': 'ڈیل ہو گئی',
+          'follow_up': 'فالو اپ',
+          'lost': 'Lead Lost',
+          'cancelled': 'منسوخ'
         };
 
-        function UmrahInbox() {
-            const [conversation, setConversation] = useState(null);
-            const [loading, setLoading] = useState(true);
-            const [updating, setUpdating] = useState(false);
-            const [error, setError] = useState(null);
+        if (!confirm(`کیا آپ status کو "${statusLabels[newStatus]}" میں تبدیل کرنا چاہتے ہیں؟`)) return;
 
-            const urlParams = new URLSearchParams(window.location.search);
-            const leadIdFromQuery = urlParams.get('id') || urlParams.get('lead_id');
+        try {
+          setUpdating(true);
 
-            const lastSeg = window.location.pathname.split('/').filter(Boolean).pop();
-            const leadIdFromPath = (lastSeg && /^\d+$/.test(lastSeg)) ? lastSeg : null;
+          const updated = await apiFetch(`/leads/${conversation.lead_id}/status`, {
+            method: 'PATCH',
+            body: JSON.stringify({ status: newStatus })
+          });
 
-            const leadId = leadIdFromQuery || leadIdFromPath;
+          setConversation(prev => ({
+            ...prev,
+            ...(updated && typeof updated === 'object' ? updated : {}),
+            status: newStatus,
+            last_contact_date: new Date().toISOString()
+          }));
 
-            useEffect(() => {
-                loadConversation();
-            }, []);
-
-            const loadConversation = async () => {
-                try {
-                    setLoading(true);
-                    setError(null);
-
-                    if (!leadId) throw new Error('Lead ID نہیں ملا۔ براہ کرم URL میں ?id=123 دیں');
-
-                    let lead = null;
-
-                    try { lead = await apiFetch(`/leads/${leadId}`); } catch (e) {}
-
-                    if (!lead) {
-                        try {
-                            const data = await apiFetch(`/leads?lead_id=${encodeURIComponent(leadId)}`);
-                            if (Array.isArray(data)) lead = data[0] || null;
-                            else if (data && Array.isArray(data.leads)) lead = data.leads[0] || null;
-                            else if (data && data.lead_id) lead = data;
-                        } catch (e) {}
-                    }
-
-                    if (!lead) {
-                        const data = await apiFetch('/leads');
-                        const list = Array.isArray(data) ? data : (data?.leads || []);
-                        lead = list.find(x => String(x.lead_id) === String(leadId)) || null;
-                    }
-
-                    if (!lead) throw new Error('Lead نہیں ملا');
-
-                    const messages = Array.isArray(lead.messages) ? lead.messages : [];
-                    setConversation({ ...lead, messages });
-                    setLoading(false);
-                } catch (err) {
-                    setError(err.message || 'ڈیٹا لوڈ نہیں ہو سکا');
-                    setLoading(false);
-                }
-            };
-
-            const updateStatus = async (newStatus) => {
-                const statusLabels = {
-                    'new': 'نیا',
-                    'contacted': 'رابطہ ہو گیا',
-                    'negotiating': 'بات چیت جاری',
-                    'deal_done': 'ڈیل ہو گئی',
-                    'follow_up': 'فالو اپ',
-                    'lost': 'Lead Lost',
-                    'cancelled': 'منسوخ'
-                };
-
-                if (!confirm(`کیا آپ status کو "${statusLabels[newStatus]}" میں تبدیل کرنا چاہتے ہیں؟`)) return;
-
-                try {
-                    setUpdating(true);
-
-                    const updated = await apiFetch(`/leads/${conversation.lead_id}/status`, {
-                        method: 'PATCH',
-                        body: JSON.stringify({ status: newStatus })
-                    });
-
-                    setConversation(prev => ({
-                        ...prev,
-                        ...(updated && typeof updated === 'object' ? updated : {}),
-                        status: newStatus,
-                        last_contact_date: new Date().toISOString()
-                    }));
-
-                    alert(`✅ Status ${statusLabels[newStatus]} میں update ہو گیا!`);
-                    setUpdating(false);
-                } catch (err) {
-                    alert('❌ ' + (err.message || 'Status update نہیں ہو سکا'));
-                    setUpdating(false);
-                }
-            };
-
-            const getStatusBadge = (status) => {
-                const badges = {
-                    new: { bg: 'bg-blue-100', text: 'text-blue-700', label: '🆕 نیا' },
-                    contacted: { bg: 'bg-yellow-100', text: 'text-yellow-700', label: '📞 رابطہ ہوا' },
-                    negotiating: { bg: 'bg-purple-100', text: 'text-purple-700', label: '💬 بات چیت' },
-                    deal_done: { bg: 'bg-green-100', text: 'text-green-700', label: '✅ ڈیل' },
-                    follow_up: { bg: 'bg-orange-100', text: 'text-orange-700', label: '🔄 فالو اپ' },
-                    lost: { bg: 'bg-red-100', text: 'text-red-700', label: '❌ Lost' },
-                    cancelled: { bg: 'bg-gray-100', text: 'text-gray-700', label: '🚫 منسوخ' }
-                };
-                const badge = badges[status] || badges.new;
-                return (
-                    <span className={`px-3 py-1 rounded-full text-sm font-semibold ${badge.bg} ${badge.text}`}>
-                        {badge.label}
-                    </span>
-                );
-            };
-
-            const getPriorityBadge = (priority) => {
-                const badges = {
-                    urgent: { bg: 'bg-red-500', text: 'text-white', label: '🚨 Urgent' },
-                    high: { bg: 'bg-orange-500', text: 'text-white', label: '⚠️ High' },
-                    medium: { bg: 'bg-blue-500', text: 'text-white', label: '📌 Medium' },
-                    low: { bg: 'bg-gray-500', text: 'text-white', label: '📋 Low' }
-                };
-                const badge = badges[priority] || badges.medium;
-                return (
-                    <span className={`px-2 py-1 rounded text-xs font-semibold ${badge.bg} ${badge.text}`}>
-                        {badge.label}
-                    </span>
-                );
-            };
-
-            const formatCurrency = (amount, currency='PKR') => {
-                if (amount == null || amount === '') return '-';
-                try { return `${currency} ${Number(amount).toLocaleString()}`; } catch { return `${currency} ${amount}`; }
-            };
-
-            const getLeadAge = (created_at) => {
-                if (!created_at) return '';
-                const now = new Date();
-                const created = new Date(created_at);
-                const hours = Math.floor((now - created) / (1000 * 60 * 60));
-                if (hours < 1) return 'ابھی ابھی';
-                if (hours < 24) return `${hours} گھنٹے پہلے`;
-                const days = Math.floor(hours / 24);
-                return `${days} دن پہلے`;
-            };
-
-            if (loading) {
-                return (
-                    <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 flex items-center justify-center">
-                        <div className="text-center">
-                            <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-green-600 mx-auto mb-4"></div>
-                            <p className="text-gray-600 text-lg">لوڈ ہو رہا ہے...</p>
-                        </div>
-                    </div>
-                );
-            }
-
-            if (error) {
-                return (
-                    <div className="min-h-screen bg-gradient-to-br from-red-50 to-orange-50 flex items-center justify-center p-4">
-                        <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-md text-center">
-                            <div className="text-red-500 text-6xl mb-4">⚠️</div>
-                            <h2 className="text-2xl font-bold text-gray-800 mb-2">خرابی!</h2>
-                            <p className="text-gray-600">{error}</p>
-                            <button onClick={loadConversation} className="mt-4 bg-gray-800 text-white px-4 py-2 rounded-lg">
-                                دوبارہ لوڈ کریں
-                            </button>
-                        </div>
-                    </div>
-                );
-            }
-
-            // ✅ rest of your JSX remains SAME...
-            // (Your UI code continues exactly as you pasted)
-
-            return (
-                <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50">
-                    {/* ... keep the rest same (no change needed) ... */}
-                    <div className="bg-gradient-to-r from-green-600 to-emerald-600 text-white shadow-2xl">
-                        <div className="max-w-7xl mx-auto px-4 py-6">
-                            <div className="flex items-center justify-between">
-                                <div>
-                                    <h1 className="text-2xl md:text-3xl font-bold mb-2 flex items-center gap-2">
-                                        <Icons.MessageCircle />
-                                        Team Inbox
-                                    </h1>
-                                    <p className="text-green-100 text-sm">
-                                        Lead ID: #{conversation.lead_id} {conversation.created_at ? `• ${getLeadAge(conversation.created_at)}` : ''}
-                                    </p>
-                                </div>
-                                <div className="text-right">
-                                    {getPriorityBadge(conversation.priority)}
-                                    <div className="mt-2">{getStatusBadge(conversation.status)}</div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* ✅ keep your remaining UI EXACTLY SAME */}
-                </div>
-            );
+          alert(`✅ Status ${statusLabels[newStatus]} میں update ہو گیا!`);
+          setUpdating(false);
+        } catch (err) {
+          alert('❌ ' + (err.message || 'Status update نہیں ہو سکا'));
+          setUpdating(false);
         }
+      };
 
-        const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(<UmrahInbox />);
-    </script>
+      const getStatusBadge = (status) => {
+        const badges = {
+          new: { bg: 'bg-blue-100', text: 'text-blue-700', label: '🆕 نیا' },
+          contacted: { bg: 'bg-yellow-100', text: 'text-yellow-700', label: '📞 رابطہ ہوا' },
+          negotiating: { bg: 'bg-purple-100', text: 'text-purple-700', label: '💬 بات چیت' },
+          deal_done: { bg: 'bg-green-100', text: 'text-green-700', label: '✅ ڈیل' },
+          follow_up: { bg: 'bg-orange-100', text: 'text-orange-700', label: '🔄 فالو اپ' },
+          lost: { bg: 'bg-red-100', text: 'text-red-700', label: '❌ Lost' },
+          cancelled: { bg: 'bg-gray-100', text: 'text-gray-700', label: '🚫 منسوخ' }
+        };
+
+        const badge = badges[status] || badges.new;
+        return (
+          <span className={`px-3 py-1 rounded-full text-sm font-semibold ${badge.bg} ${badge.text}`}>
+            {badge.label}
+          </span>
+        );
+      };
+
+      const getPriorityBadge = (priority) => {
+        const badges = {
+          urgent: { bg: 'bg-red-500', text: 'text-white', label: '🚨 Urgent' },
+          high: { bg: 'bg-orange-500', text: 'text-white', label: '⚠️ High' },
+          medium: { bg: 'bg-blue-500', text: 'text-white', label: '📌 Medium' },
+          low: { bg: 'bg-gray-500', text: 'text-white', label: '📋 Low' }
+        };
+
+        const badge = badges[priority] || badges.medium;
+        return (
+          <span className={`px-2 py-1 rounded text-xs font-semibold ${badge.bg} ${badge.text}`}>
+            {badge.label}
+          </span>
+        );
+      };
+
+      const formatCurrency = (amount) => {
+        if (amount == null || amount === '') return '-';
+        try { return `PKR ${Number(amount).toLocaleString()}`; } catch { return `PKR ${amount}`; }
+      };
+
+      const getLeadAge = (created_at) => {
+        if (!created_at) return '';
+        const now = new Date();
+        const created = new Date(created_at);
+        const hours = Math.floor((now - created) / (1000 * 60 * 60));
+
+        if (hours < 1) return 'ابھی ابھی';
+        if (hours < 24) return `${hours} گھنٹے پہلے`;
+        const days = Math.floor(hours / 24);
+        return `${days} دن پہلے`;
+      };
+
+      if (loading) {
+        return (
+          <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 flex items-center justify-center">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-green-600 mx-auto mb-4"></div>
+              <p className="text-gray-600 text-lg">لوڈ ہو رہا ہے...</p>
+            </div>
+          </div>
+        );
+      }
+
+      if (error) {
+        return (
+          <div className="min-h-screen bg-gradient-to-br from-red-50 to-orange-50 flex items-center justify-center p-4">
+            <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-md text-center">
+              <div className="text-red-500 text-6xl mb-4">⚠️</div>
+              <h2 className="text-2xl font-bold text-gray-800 mb-2">خرابی!</h2>
+              <p className="text-gray-600">{error}</p>
+
+              <div className="mt-4 text-sm text-gray-500">
+                ✅ Example: <span className="font-mono">/inbox.html?id=1</span>
+              </div>
+
+              <button onClick={loadConversation} className="mt-4 bg-gray-800 text-white px-4 py-2 rounded-lg">
+                دوبارہ لوڈ کریں
+              </button>
+            </div>
+          </div>
+        );
+      }
+
+      return (
+        <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50">
+          {/* Header */}
+          <div className="bg-gradient-to-r from-green-600 to-emerald-600 text-white shadow-2xl">
+            <div className="max-w-7xl mx-auto px-4 py-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h1 className="text-2xl md:text-3xl font-bold mb-2 flex items-center gap-2">
+                    <Icons.MessageCircle />
+                    Team Inbox
+                  </h1>
+                  <p className="text-green-100 text-sm">
+                    Lead ID: #{conversation.lead_id} • {getLeadAge(conversation.created_at)}
+                  </p>
+                </div>
+                <div className="text-right">
+                  {getPriorityBadge(conversation.priority)}
+                  <div className="mt-2">{getStatusBadge(conversation.status)}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Main Content */}
+          <div className="max-w-7xl mx-auto px-4 py-6">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {/* Sidebar - Lead Info */}
+              <div className="space-y-6">
+                {/* Customer Info */}
+                <div className="bg-white rounded-2xl shadow-lg p-6">
+                  <h3 className="font-bold text-gray-800 mb-4 flex items-center gap-2">
+                    <Icons.Users />
+                    کسٹمر کی معلومات
+                  </h3>
+                  <div className="space-y-3">
+                    <div>
+                      <p className="text-gray-500 text-sm">نام</p>
+                      <p className="font-semibold text-lg">{conversation.customer_name || '-'}</p>
+                    </div>
+                    <div>
+                      <p className="text-gray-500 text-sm">WhatsApp</p>
+                      <p className="font-semibold text-blue-600">{conversation.wa_number || '-'}</p>
+                    </div>
+                    <div>
+                      <p className="text-gray-500 text-sm">Assigned To</p>
+                      <p className="font-semibold">{conversation.assigned_to_name || '-'}</p>
+                    </div>
+                    <div>
+                      <p className="text-gray-500 text-sm">Source</p>
+                      <span className="inline-flex items-center gap-1 text-sm bg-green-100 text-green-700 px-2 py-1 rounded">
+                        💬 {conversation.source || '-'}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Travel Requirements */}
+                <div className="bg-white rounded-2xl shadow-lg p-6">
+                  <h3 className="font-bold text-gray-800 mb-4">✈️ سفر کی تفصیلات</h3>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between items-center py-2 border-b">
+                      <span className="text-gray-600">ایئرپورٹ</span>
+                      <span className="font-semibold">{conversation.departure_airport || '-'}</span>
+                    </div>
+                    <div className="flex justify-between items-center py-2 border-b">
+                      <span className="text-gray-600">مہینہ</span>
+                      <span className="font-semibold">{conversation.preferred_month || '-'}</span>
+                    </div>
+                    <div className="flex justify-between items-center py-2 border-b">
+                      <span className="text-gray-600">دورانیہ</span>
+                      <span className="font-semibold">{conversation.duration_days != null ? `${conversation.duration_days} دن` : '-'}</span>
+                    </div>
+                    <div className="flex justify-between items-center py-2 border-b">
+                      <span className="text-gray-600">افراد</span>
+                      <span className="font-semibold">{conversation.number_of_persons != null ? `${conversation.number_of_persons} افراد` : '-'}</span>
+                    </div>
+                    <div className="flex justify-between items-center py-2 border-b">
+                      <span className="text-gray-600">تفصیل</span>
+                      <span className="font-semibold text-xs">
+                        {(conversation.adult_males ?? 0)}M, {(conversation.adult_females ?? 0)}F
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center py-2 border-b">
+                      <span className="text-gray-600">بجٹ</span>
+                      <span className="font-semibold">{formatCurrency(conversation.budget_per_person)}/person</span>
+                    </div>
+                    <div className="flex justify-between items-center py-2 border-b">
+                      <span className="text-gray-600">ہوٹل فاصلہ</span>
+                      <span className="font-semibold">{conversation.hotel_distance_preference || '-'}</span>
+                    </div>
+                    <div className="flex justify-between items-center py-2">
+                      <span className="text-gray-600">کمرہ</span>
+                      <span className="font-semibold">{conversation.room_sharing_preference || '-'}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Notes */}
+                {conversation.notes && (
+                  <div className="bg-yellow-50 rounded-2xl shadow-lg p-6 border-2 border-yellow-200">
+                    <h3 className="font-bold text-gray-800 mb-2">📝 نوٹس</h3>
+                    <p className="text-sm text-gray-700">{conversation.notes}</p>
+                  </div>
+                )}
+
+                {/* Status Buttons */}
+                <div className="bg-white rounded-2xl shadow-lg p-6">
+                  <h3 className="font-bold text-gray-800 mb-4">📊 Status Update کریں</h3>
+                  <div className="space-y-2">
+                    <button
+                      onClick={() => updateStatus('contacted')}
+                      disabled={updating || conversation.status === 'contacted'}
+                      className="w-full bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 disabled:from-gray-300 disabled:to-gray-400 text-white font-semibold py-3 px-4 rounded-xl transition-all shadow-md hover:shadow-lg disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                    >
+                      <Icons.Phone />
+                      📞 رابطہ ہو گیا
+                    </button>
+
+                    <button
+                      onClick={() => updateStatus('negotiating')}
+                      disabled={updating || conversation.status === 'negotiating'}
+                      className="w-full bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 disabled:from-gray-300 disabled:to-gray-400 text-white font-semibold py-3 px-4 rounded-xl transition-all shadow-md hover:shadow-lg disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                    >
+                      💬 بات چیت جاری
+                    </button>
+
+                    <button
+                      onClick={() => updateStatus('deal_done')}
+                      disabled={updating || conversation.status === 'deal_done'}
+                      className="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 disabled:from-gray-300 disabled:to-gray-400 text-white font-semibold py-3 px-4 rounded-xl transition-all shadow-md hover:shadow-lg disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                    >
+                      <Icons.UserCheck />
+                      ✅ ڈیل ہو گئی
+                    </button>
+
+                    <button
+                      onClick={() => updateStatus('follow_up')}
+                      disabled={updating || conversation.status === 'follow_up'}
+                      className="w-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 disabled:from-gray-300 disabled:to-gray-400 text-white font-semibold py-3 px-4 rounded-xl transition-all shadow-md hover:shadow-lg disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                    >
+                      <Icons.Calendar />
+                      🔄 فالو اپ
+                    </button>
+
+                    <button
+                      onClick={() => updateStatus('lost')}
+                      disabled={updating || conversation.status === 'lost'}
+                      className="w-full bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 disabled:from-gray-300 disabled:to-gray-400 text-white font-semibold py-3 px-4 rounded-xl transition-all shadow-md hover:shadow-lg disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                    >
+                      ❌ Lead Lost
+                    </button>
+                  </div>
+
+                  {updating && (
+                    <div className="mt-4 text-center text-sm text-gray-600">
+                      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-green-600 mx-auto mb-2"></div>
+                      اپ ڈیٹ ہو رہا ہے...
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Chat History */}
+              <div className="lg:col-span-2">
+                <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
+                  <div className="bg-gradient-to-r from-green-500 to-green-600 text-white p-4">
+                    <h2 className="text-lg font-bold flex items-center gap-2">
+                      <Icons.MessageCircle />
+                      مکمل گفتگو
+                    </h2>
+                    <p className="text-sm text-green-100 mt-1">
+                      📖 Read-Only Mode - یہ صرف دیکھنے کے لیے ہے
+                    </p>
+                  </div>
+
+                  <div className="p-6 space-y-4 max-h-[700px] overflow-y-auto bg-gray-50">
+                    {(!conversation.messages || conversation.messages.length === 0) ? (
+                      <div className="text-center text-sm text-gray-500 py-10">
+                        Messages ابھی available نہیں
+                      </div>
+                    ) : (
+                      conversation.messages.map((msg) => (
+                        <div
+                          key={msg.message_id || `${msg.created_at}-${msg.message_text}`}
+                          className={`flex ${msg.sender_type === 'customer' ? 'justify-start' : 'justify-end'}`}
+                        >
+                          <div
+                            className={`max-w-[70%] rounded-2xl px-4 py-3 shadow-md ${
+                              msg.sender_type === 'customer'
+                                ? 'bg-gradient-to-r from-green-500 to-green-600 text-white rounded-br-none'
+                                : 'bg-white text-gray-800 rounded-bl-none border border-gray-200'
+                            }`}
+                          >
+                            <p className="text-sm whitespace-pre-wrap leading-relaxed">{msg.message_text}</p>
+                            <p className={`text-xs mt-2 ${msg.sender_type === 'customer' ? 'text-green-100' : 'text-gray-400'}`}>
+                              {msg.created_at}
+                            </p>
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+
+                  <div className="bg-gray-100 p-4 border-t border-gray-200">
+                    <div className="flex items-center justify-center gap-2 text-gray-500 text-sm">
+                      <Icons.AlertCircle />
+                      <span>آپ یہاں reply نہیں کر سکتے - صرف Status Update کریں</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<UmrahInbox />);
+  </script>
 </body>
 </html>
