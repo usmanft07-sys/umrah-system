@@ -84,7 +84,7 @@
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Search</label>
-                    <input type="text" id="searchPackage" onkeyup="filterPackages()" placeholder="Search packages..." 
+                    <input type="text" id="searchPackage" onkeyup="applySearchLocal()" placeholder="Search packages..."
                            class="w-full border border-gray-300 rounded-lg px-3 py-2">
                 </div>
             </div>
@@ -109,39 +109,7 @@
                         </tr>
                     </thead>
                     <tbody id="packagesTableBody" class="bg-white divide-y divide-gray-200">
-                        <!-- Sample Data -->
-                        <tr>
-                            <td class="px-4 py-3 text-sm text-gray-900">1</td>
-                            <td class="px-4 py-3 text-sm font-medium text-gray-900">Ramadan Special 15 Days</td>
-                            <td class="px-4 py-3 text-sm text-gray-600">Lahore</td>
-                            <td class="px-4 py-3 text-sm text-gray-600">
-                                <div>2025-03-15</div>
-                                <div class="text-xs text-purple-600">Ramadan</div>
-                            </td>
-                            <td class="px-4 py-3 text-sm text-gray-600">15 Days</td>
-                            <td class="px-4 py-3 text-sm text-gray-600">
-                                <div>Makkah: Al Shohada (400m)</div>
-                                <div>Madina: Dar Al Taqwa (300m)</div>
-                            </td>
-                            <td class="px-4 py-3 text-sm font-semibold text-gray-900">PKR 285,000</td>
-                            <td class="px-4 py-3 text-sm">
-                                <span class="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs">Yes (Dubai)</span>
-                            </td>
-                            <td class="px-4 py-3">
-                                <span class="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium">Active</span>
-                            </td>
-                            <td class="px-4 py-3 text-sm">
-                                <button onclick="viewPackage(1)" class="text-blue-600 hover:text-blue-800 mr-2">
-                                    <i class="fas fa-eye"></i>
-                                </button>
-                                <button onclick="editPackage(1)" class="text-purple-600 hover:text-purple-800 mr-2">
-                                    <i class="fas fa-edit"></i>
-                                </button>
-                                <button onclick="deletePackage(1)" class="text-red-600 hover:text-red-800">
-                                    <i class="fas fa-trash"></i>
-                                </button>
-                            </td>
-                        </tr>
+                        <!-- API data will render here -->
                     </tbody>
                 </table>
             </div>
@@ -153,7 +121,7 @@
                 <div class="flex items-center justify-between">
                     <div>
                         <p class="text-sm text-gray-500">Total Packages</p>
-                        <p class="text-2xl font-bold text-gray-800">24</p>
+                        <p id="sumTotal" class="text-2xl font-bold text-gray-800">0</p>
                     </div>
                     <i class="fas fa-box-open text-3xl text-blue-500"></i>
                 </div>
@@ -162,7 +130,7 @@
                 <div class="flex items-center justify-between">
                     <div>
                         <p class="text-sm text-gray-500">Active</p>
-                        <p class="text-2xl font-bold text-green-600">18</p>
+                        <p id="sumActive" class="text-2xl font-bold text-green-600">0</p>
                     </div>
                     <i class="fas fa-check-circle text-3xl text-green-500"></i>
                 </div>
@@ -171,7 +139,7 @@
                 <div class="flex items-center justify-between">
                     <div>
                         <p class="text-sm text-gray-500">Sold Out</p>
-                        <p class="text-2xl font-bold text-red-600">3</p>
+                        <p id="sumSoldOut" class="text-2xl font-bold text-red-600">0</p>
                     </div>
                     <i class="fas fa-times-circle text-3xl text-red-500"></i>
                 </div>
@@ -180,7 +148,7 @@
                 <div class="flex items-center justify-between">
                     <div>
                         <p class="text-sm text-gray-500">Inactive</p>
-                        <p class="text-2xl font-bold text-gray-600">3</p>
+                        <p id="sumInactive" class="text-2xl font-bold text-gray-600">0</p>
                     </div>
                     <i class="fas fa-pause-circle text-3xl text-gray-500"></i>
                 </div>
@@ -230,7 +198,8 @@
                                    class="w-full border border-gray-300 rounded-lg px-3 py-2"
                                    placeholder="e.g., 15">
                         </div>
-                        {/* ✅ NEW: Islamic Month */}
+
+                        <!-- Islamic Month -->
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Islamic Month *</label>
                             <select name="islamic_month" required class="w-full border border-gray-300 rounded-lg px-3 py-2">
@@ -246,7 +215,8 @@
                             </select>
                             <p class="text-xs text-gray-500 mt-1">Islamic lunar month of travel</p>
                         </div>
-                        {/* ✅ NEW: Currency */}
+
+                        <!-- Currency -->
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Currency *</label>
                             <select name="currency" required class="w-full border border-gray-300 rounded-lg px-3 py-2">
@@ -265,7 +235,6 @@
                         Hotel Information
                     </h3>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <!-- Makkah Hotel -->
                         <div class="bg-green-50 rounded-lg p-4">
                             <h4 class="font-semibold text-gray-800 mb-3">🕋 Makkah Hotel</h4>
                             <div class="space-y-3">
@@ -280,12 +249,10 @@
                                     <input type="number" name="hotel_distance_makkah_m" min="0" required
                                            class="w-full border border-gray-300 rounded-lg px-3 py-2"
                                            placeholder="e.g., 400">
-                                    <p class="text-xs text-gray-500 mt-1">Distance in meters from Masjid Al Haram</p>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- Madina Hotel -->
                         <div class="bg-blue-50 rounded-lg p-4">
                             <h4 class="font-semibold text-gray-800 mb-3">🕌 Madina Hotel</h4>
                             <div class="space-y-3">
@@ -300,21 +267,19 @@
                                     <input type="number" name="hotel_distance_medina_m" min="0" required
                                            class="w-full border border-gray-300 rounded-lg px-3 py-2"
                                            placeholder="e.g., 300">
-                                    <p class="text-xs text-gray-500 mt-1">Distance in meters from Masjid Nabawi</p>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                {/* ✅ COMPLETE PRICING SECTION - ALL TIERS */}
+                <!-- Pricing -->
                 <div class="mb-8">
                     <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
                         <i class="fas fa-money-bill-wave text-purple-600 mr-2"></i>
                         Complete Pricing (All Categories)
                     </h3>
-                    
-                    <!-- Adult Pricing -->
+
                     <div class="mb-6">
                         <h4 class="font-medium text-gray-700 mb-3 text-sm bg-purple-50 px-3 py-2 rounded">
                             👨‍👩‍👧‍👦 Adult Pricing
@@ -323,38 +288,26 @@
                             <div>
                                 <label class="block text-sm text-gray-600 mb-1">Adult Sharing (4+) *</label>
                                 <input type="number" name="adult_sharing_price" min="0" step="0.01" required
-                                       class="w-full border border-gray-300 rounded-lg px-3 py-2"
-                                       placeholder="e.g., 285000">
-                                <p class="text-xs text-gray-500 mt-1">4 or more persons sharing</p>
+                                       class="w-full border border-gray-300 rounded-lg px-3 py-2">
                             </div>
-                            {/* ✅ NEW: Quad Price */}
                             <div>
                                 <label class="block text-sm text-gray-600 mb-1">Quad (4 sharing)</label>
                                 <input type="number" name="quad_price" min="0" step="0.01"
-                                       class="w-full border border-gray-300 rounded-lg px-3 py-2"
-                                       placeholder="e.g., 285000">
-                                <p class="text-xs text-gray-500 mt-1">Exactly 4 persons</p>
+                                       class="w-full border border-gray-300 rounded-lg px-3 py-2">
                             </div>
-                            {/* ✅ NEW: Triple Price */}
                             <div>
                                 <label class="block text-sm text-gray-600 mb-1">Triple (3 sharing)</label>
                                 <input type="number" name="triple_price" min="0" step="0.01"
-                                       class="w-full border border-gray-300 rounded-lg px-3 py-2"
-                                       placeholder="e.g., 295000">
-                                <p class="text-xs text-gray-500 mt-1">3 persons in one room</p>
+                                       class="w-full border border-gray-300 rounded-lg px-3 py-2">
                             </div>
-                            {/* ✅ NEW: Double Price */}
                             <div>
                                 <label class="block text-sm text-gray-600 mb-1">Double (2 person)</label>
                                 <input type="number" name="double_price" min="0" step="0.01"
-                                       class="w-full border border-gray-300 rounded-lg px-3 py-2"
-                                       placeholder="e.g., 310000">
-                                <p class="text-xs text-gray-500 mt-1">2 persons in one room</p>
+                                       class="w-full border border-gray-300 rounded-lg px-3 py-2">
                             </div>
                         </div>
                     </div>
 
-                    {/* ✅ NEW: Children & Infant Pricing */}
                     <div>
                         <h4 class="font-medium text-gray-700 mb-3 text-sm bg-blue-50 px-3 py-2 rounded">
                             👶 Children & Infant Pricing
@@ -363,39 +316,30 @@
                             <div>
                                 <label class="block text-sm text-gray-600 mb-1">Child with Bed</label>
                                 <input type="number" name="child_with_bed_price" min="0" step="0.01"
-                                       class="w-full border border-gray-300 rounded-lg px-3 py-2"
-                                       placeholder="e.g., 240000">
-                                <p class="text-xs text-gray-500 mt-1">2-12 years with bed</p>
+                                       class="w-full border border-gray-300 rounded-lg px-3 py-2">
                             </div>
                             <div>
                                 <label class="block text-sm text-gray-600 mb-1">Child without Bed</label>
                                 <input type="number" name="child_without_bed_price" min="0" step="0.01"
-                                       class="w-full border border-gray-300 rounded-lg px-3 py-2"
-                                       placeholder="e.g., 200000">
-                                <p class="text-xs text-gray-500 mt-1">2-12 years no bed</p>
+                                       class="w-full border border-gray-300 rounded-lg px-3 py-2">
                             </div>
                             <div>
                                 <label class="block text-sm text-gray-600 mb-1">Infant Price</label>
                                 <input type="number" name="infant_price" min="0" step="0.01"
-                                       class="w-full border border-gray-300 rounded-lg px-3 py-2"
-                                       placeholder="e.g., 50000">
-                                <p class="text-xs text-gray-500 mt-1">0-2 years</p>
+                                       class="w-full border border-gray-300 rounded-lg px-3 py-2">
                             </div>
                         </div>
                     </div>
 
-                    <!-- Sharing Option -->
                     <div class="mt-6">
                         <label class="block text-sm font-medium text-gray-700 mb-2">Sharing Allowed</label>
                         <div class="flex items-center space-x-6">
                             <label class="flex items-center">
-                                <input type="radio" name="sharing_allowed" value="true" checked
-                                       class="w-4 h-4 text-purple-600">
+                                <input type="radio" name="sharing_allowed" value="true" checked class="w-4 h-4 text-purple-600">
                                 <span class="ml-2 text-sm text-gray-700">Yes (4+ person sharing allowed)</span>
                             </label>
                             <label class="flex items-center">
-                                <input type="radio" name="sharing_allowed" value="false"
-                                       class="w-4 h-4 text-purple-600">
+                                <input type="radio" name="sharing_allowed" value="false" class="w-4 h-4 text-purple-600">
                                 <span class="ml-2 text-sm text-gray-700">No (Private rooms only)</span>
                             </label>
                         </div>
@@ -417,42 +361,35 @@
                     </div>
 
                     <div id="flightDetailsSection" style="display: none;">
-                        {/* ✅ BOTH Going and Return Flight Details */}
                         <div class="space-y-4">
-                            <!-- Going Flight -->
                             <div class="bg-blue-50 rounded-lg p-4">
                                 <h4 class="font-semibold text-gray-800 mb-3">✈️ Going Flight Layover</h4>
                                 <div class="grid grid-cols-2 gap-4">
                                     <div>
                                         <label class="block text-sm text-gray-600 mb-1">Layover City</label>
                                         <input type="text" name="going_layover_city"
-                                               class="w-full border border-gray-300 rounded-lg px-3 py-2"
-                                               placeholder="e.g., Dubai">
+                                               class="w-full border border-gray-300 rounded-lg px-3 py-2">
                                     </div>
                                     <div>
                                         <label class="block text-sm text-gray-600 mb-1">Layover Duration (hours)</label>
                                         <input type="number" name="going_layover_duration" step="0.5" min="0"
-                                               class="w-full border border-gray-300 rounded-lg px-3 py-2"
-                                               placeholder="e.g., 3.5">
+                                               class="w-full border border-gray-300 rounded-lg px-3 py-2">
                                     </div>
                                 </div>
                             </div>
 
-                            {/* ✅ NEW: Return Flight */}
                             <div class="bg-green-50 rounded-lg p-4">
                                 <h4 class="font-semibold text-gray-800 mb-3">🔙 Return Flight Layover</h4>
                                 <div class="grid grid-cols-2 gap-4">
                                     <div>
                                         <label class="block text-sm text-gray-600 mb-1">Return Layover City</label>
                                         <input type="text" name="return_layover_city"
-                                               class="w-full border border-gray-300 rounded-lg px-3 py-2"
-                                               placeholder="e.g., Dubai">
+                                               class="w-full border border-gray-300 rounded-lg px-3 py-2">
                                     </div>
                                     <div>
                                         <label class="block text-sm text-gray-600 mb-1">Return Duration (hours)</label>
                                         <input type="number" name="return_layover_duration" step="0.5" min="0"
-                                               class="w-full border border-gray-300 rounded-lg px-3 py-2"
-                                               placeholder="e.g., 2.5">
+                                               class="w-full border border-gray-300 rounded-lg px-3 py-2">
                                     </div>
                                 </div>
                             </div>
@@ -468,18 +405,15 @@
                     </h3>
                     <div class="flex items-center space-x-6">
                         <label class="flex items-center">
-                            <input type="radio" name="status" value="Active" checked
-                                   class="w-4 h-4 text-green-600">
+                            <input type="radio" name="status" value="Active" checked class="w-4 h-4 text-green-600">
                             <span class="ml-2 text-sm font-medium text-gray-700">Active</span>
                         </label>
                         <label class="flex items-center">
-                            <input type="radio" name="status" value="Inactive"
-                                   class="w-4 h-4 text-gray-600">
+                            <input type="radio" name="status" value="Inactive" class="w-4 h-4 text-gray-600">
                             <span class="ml-2 text-sm font-medium text-gray-700">Inactive</span>
                         </label>
                         <label class="flex items-center">
-                            <input type="radio" name="status" value="Sold Out"
-                                   class="w-4 h-4 text-red-600">
+                            <input type="radio" name="status" value="Sold Out" class="w-4 h-4 text-red-600">
                             <span class="ml-2 text-sm font-medium text-gray-700">Sold Out</span>
                         </label>
                     </div>
@@ -487,11 +421,11 @@
 
                 <!-- Form Actions -->
                 <div class="flex justify-end space-x-4 pt-4 border-t">
-                    <button type="button" onclick="closeModal()" 
+                    <button type="button" onclick="closeModal()"
                             class="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition">
                         Cancel
                     </button>
-                    <button type="submit" 
+                    <button type="submit"
                             class="px-6 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-semibold transition">
                         <i class="fas fa-save mr-2"></i>Save Package
                     </button>
@@ -501,78 +435,268 @@
     </div>
 
     <script>
-        // Toggle flight details section
+        // =========================
+        // ✅ API CONFIG (DEV)
+        // =========================
+        const API_URL = 'http://localhost:3000/api';
+
+        async function apiFetch(path, options = {}) {
+            const res = await fetch(`${API_URL}${path}`, {
+                headers: { 'Content-Type': 'application/json', ...(options.headers || {}) },
+                ...options,
+            });
+
+            const text = await res.text();
+            let data;
+            try { data = text ? JSON.parse(text) : null; } catch { data = text; }
+
+            if (!res.ok) throw new Error((data && data.error) ? data.error : (data || `HTTP ${res.status}`));
+            return data;
+        }
+
+        // =========================
+        // ✅ UI Helpers
+        // =========================
         function toggleFlightDetails() {
             const checkbox = document.getElementById('viaFlight');
             const section = document.getElementById('flightDetailsSection');
             section.style.display = checkbox.checked ? 'block' : 'none';
         }
 
-        // Open add modal
+        let editingPackageId = null;
+        let allPackages = [];
+
         function openAddModal() {
+            editingPackageId = null;
             document.getElementById('modalTitle').textContent = 'Add New Package';
             document.getElementById('packageForm').reset();
+            toggleFlightDetails();
             document.getElementById('packageModal').classList.add('active');
         }
 
-        // Close modal
         function closeModal() {
             document.getElementById('packageModal').classList.remove('active');
         }
 
-        // Filter packages
-        function filterPackages() {
+        function updateSummary() {
+            const total = allPackages.length;
+            const active = allPackages.filter(p => p.status === 'Active').length;
+            const sold = allPackages.filter(p => p.status === 'Sold Out').length;
+            const inactive = allPackages.filter(p => p.status === 'Inactive').length;
+
+            document.getElementById('sumTotal').textContent = total;
+            document.getElementById('sumActive').textContent = active;
+            document.getElementById('sumSoldOut').textContent = sold;
+            document.getElementById('sumInactive').textContent = inactive;
+        }
+
+        // =========================
+        // ✅ Render Table
+        // =========================
+        function renderPackages(rows) {
+            const tbody = document.getElementById('packagesTableBody');
+
+            if (!rows.length) {
+                tbody.innerHTML = `
+                  <tr>
+                    <td colspan="10" class="px-4 py-6 text-center text-sm text-gray-500">
+                      No packages found.
+                    </td>
+                  </tr>
+                `;
+                return;
+            }
+
+            tbody.innerHTML = rows.map(p => `
+              <tr>
+                <td class="px-4 py-3 text-sm text-gray-900">${p.package_id ?? ''}</td>
+                <td class="px-4 py-3 text-sm font-medium text-gray-900">${p.package_name ?? ''}</td>
+                <td class="px-4 py-3 text-sm text-gray-600">${p.departure_airport ?? ''}</td>
+                <td class="px-4 py-3 text-sm text-gray-600">
+                  <div>${(p.travel_date || '').toString().slice(0,10)}</div>
+                  <div class="text-xs text-purple-600">${p.islamic_month ?? ''}</div>
+                </td>
+                <td class="px-4 py-3 text-sm text-gray-600">${p.duration_days ?? ''} Days</td>
+                <td class="px-4 py-3 text-sm text-gray-600">
+                  <div>Makkah: ${p.makkah_hotel ?? ''} (${p.hotel_distance_makkah_m ?? ''}m)</div>
+                  <div>Madina: ${p.madina_hotel ?? ''} (${p.hotel_distance_medina_m ?? ''}m)</div>
+                </td>
+                <td class="px-4 py-3 text-sm font-semibold text-gray-900">
+                  ${(p.currency ?? 'PKR')} ${Number(p.adult_sharing_price ?? 0).toLocaleString()}
+                </td>
+                <td class="px-4 py-3 text-sm">
+                  ${p.via_flight
+                    ? `<span class="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs">Yes (${p.going_layover_city ?? '-'})</span>`
+                    : `<span class="px-2 py-1 bg-gray-100 text-gray-700 rounded text-xs">No</span>`
+                  }
+                </td>
+                <td class="px-4 py-3">
+                  <span class="px-2 py-1 rounded-full text-xs font-medium ${
+                    p.status === 'Active' ? 'bg-green-100 text-green-800' :
+                    p.status === 'Sold Out' ? 'bg-red-100 text-red-800' :
+                    'bg-gray-100 text-gray-800'
+                  }">
+                    ${p.status ?? ''}
+                  </span>
+                </td>
+                <td class="px-4 py-3 text-sm">
+                  <button onclick="editPackage(${p.package_id})" class="text-purple-600 hover:text-purple-800 mr-2">
+                    <i class="fas fa-edit"></i>
+                  </button>
+                  <button onclick="deletePackage(${p.package_id})" class="text-red-600 hover:text-red-800">
+                    <i class="fas fa-trash"></i>
+                  </button>
+                </td>
+              </tr>
+            `).join('');
+        }
+
+        // =========================
+        // ✅ Loading from API
+        // =========================
+        async function loadPackagesFromAPI() {
             const airport = document.getElementById('filterAirport').value;
             const month = document.getElementById('filterMonth').value;
             const status = document.getElementById('filterStatus').value;
-            const search = document.getElementById('searchPackage').value.toLowerCase();
-            
-            // API call would go here
-            console.log('Filtering:', { airport, month, status, search });
+
+            const qs = new URLSearchParams();
+            if (airport) qs.set('airport', airport);
+            if (month) qs.set('islamic_month', month);
+            if (status) qs.set('status', status);
+
+            const data = await apiFetch(`/packages${qs.toString() ? `?${qs}` : ''}`);
+            allPackages = Array.isArray(data) ? data : (data?.packages || []);
+            updateSummary();
+            applySearchLocal();
         }
 
-        // View package details
-        function viewPackage(id) {
-            alert('View Package ID: ' + id + '\n\nComplete details will be shown here.');
+        function filterPackages() {
+            loadPackagesFromAPI().catch(err => alert('❌ ' + err.message));
         }
 
-        // Edit package
+        function applySearchLocal() {
+            const search = (document.getElementById('searchPackage').value || '').toLowerCase();
+            const filtered = !search ? allPackages : allPackages.filter(p =>
+                (p.package_name || '').toLowerCase().includes(search) ||
+                (p.departure_airport || '').toLowerCase().includes(search)
+            );
+            renderPackages(filtered);
+        }
+
+        // =========================
+        // ✅ Create/Update
+        // =========================
+        document.getElementById('packageForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const formData = new FormData(this);
+            const payload = {};
+            formData.forEach((value, key) => payload[key] = value);
+
+            const toNum = (k) => payload[k] === '' || payload[k] == null ? null : Number(payload[k]);
+            payload.duration_days = toNum('duration_days');
+            payload.adult_sharing_price = toNum('adult_sharing_price');
+            payload.quad_price = toNum('quad_price');
+            payload.triple_price = toNum('triple_price');
+            payload.double_price = toNum('double_price');
+            payload.child_with_bed_price = toNum('child_with_bed_price');
+            payload.child_without_bed_price = toNum('child_without_bed_price');
+            payload.infant_price = toNum('infant_price');
+            payload.hotel_distance_makkah_m = toNum('hotel_distance_makkah_m');
+            payload.hotel_distance_medina_m = toNum('hotel_distance_medina_m');
+            payload.going_layover_duration = toNum('going_layover_duration');
+            payload.return_layover_duration = toNum('return_layover_duration');
+
+            payload.via_flight = document.getElementById('viaFlight').checked;
+            payload.sharing_allowed = payload.sharing_allowed === 'true';
+
+            try {
+                if (editingPackageId) {
+                    await apiFetch(`/packages/${editingPackageId}`, { method: 'PUT', body: JSON.stringify(payload) });
+                    alert('✅ Package updated!');
+                } else {
+                    await apiFetch('/packages', { method: 'POST', body: JSON.stringify(payload) });
+                    alert('✅ Package created!');
+                }
+                closeModal();
+                editingPackageId = null;
+                await loadPackagesFromAPI();
+            } catch (err) {
+                alert('❌ ' + err.message);
+            }
+        });
+
         function editPackage(id) {
+            const p = allPackages.find(x => Number(x.package_id) === Number(id));
+            if (!p) return alert('Package not found');
+
+            editingPackageId = id;
             document.getElementById('modalTitle').textContent = 'Edit Package';
-            // Load package data and populate form
+
+            const f = document.getElementById('packageForm');
+
+            // Fill fields by name
+            const set = (name, val) => { if (f.elements[name]) f.elements[name].value = (val ?? ''); };
+
+            set('package_name', p.package_name);
+            set('departure_airport', p.departure_airport);
+            set('travel_date', (p.travel_date || '').toString().slice(0,10));
+            set('duration_days', p.duration_days);
+            set('islamic_month', p.islamic_month);
+            set('currency', p.currency || 'PKR');
+
+            set('makkah_hotel', p.makkah_hotel);
+            set('hotel_distance_makkah_m', p.hotel_distance_makkah_m);
+            set('madina_hotel', p.madina_hotel);
+            set('hotel_distance_medina_m', p.hotel_distance_medina_m);
+
+            set('adult_sharing_price', p.adult_sharing_price);
+            set('quad_price', p.quad_price);
+            set('triple_price', p.triple_price);
+            set('double_price', p.double_price);
+
+            set('child_with_bed_price', p.child_with_bed_price);
+            set('child_without_bed_price', p.child_without_bed_price);
+            set('infant_price', p.infant_price);
+
+            // radio
+            const shareVal = (p.sharing_allowed === false || p.sharing_allowed === 0) ? 'false' : 'true';
+            const shareRadio = f.querySelector(`input[name="sharing_allowed"][value="${shareVal}"]`);
+            if (shareRadio) shareRadio.checked = true;
+
+            const statusRadio = f.querySelector(`input[name="status"][value="${p.status || 'Active'}"]`);
+            if (statusRadio) statusRadio.checked = true;
+
+            // flight
+            document.getElementById('viaFlight').checked = !!p.via_flight;
+            toggleFlightDetails();
+            set('going_layover_city', p.going_layover_city);
+            set('going_layover_duration', p.going_layover_duration);
+            set('return_layover_city', p.return_layover_city);
+            set('return_layover_duration', p.return_layover_duration);
+
             document.getElementById('packageModal').classList.add('active');
         }
 
-        // Delete package
-        function deletePackage(id) {
-            if (confirm('Are you sure you want to delete this package?')) {
-                console.log('Deleting package:', id);
-                alert('Package deleted successfully!');
+        async function deletePackage(id) {
+            if (!confirm('Are you sure you want to delete this package?')) return;
+
+            try {
+                await apiFetch(`/packages/${id}`, { method: 'DELETE' });
+                alert('✅ Package deleted!');
+                await loadPackagesFromAPI();
+            } catch (err) {
+                alert('❌ ' + err.message);
             }
         }
 
-        // Form submission
-        document.getElementById('packageForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            const formData = new FormData(this);
-            const packageData = {};
-            
-            formData.forEach((value, key) => {
-                packageData[key] = value;
-            });
-            
-            console.log('Package Data:', packageData);
-            alert('✅ Package saved successfully with all pricing tiers!');
-            closeModal();
-        });
-
         // Close modal on outside click
         document.getElementById('packageModal').addEventListener('click', function(e) {
-            if (e.target === this) {
-                closeModal();
-            }
+            if (e.target === this) closeModal();
         });
+
+        // Initial load
+        loadPackagesFromAPI().catch(err => alert('❌ ' + err.message));
     </script>
 </body>
 </html>
