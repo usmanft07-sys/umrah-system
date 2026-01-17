@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Office Management - UmrahFlex</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Playfair+Display:wght@600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #047857;
+            --secondary: #d97706;
+            --accent: #0891b2;
+            --gold: #f59e0b;
+        }
+        
+        body { font-family: 'Poppins', sans-serif; }
+        .display-font { font-family: 'Playfair Display', serif; }
+        
+        .modal { 
+            display: none; 
+        }
+        .modal.active { 
+            display: flex; 
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .animate-fade-in {
+            animation: fadeIn 0.4s ease-out;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Navigation -->
+    <nav class="bg-white shadow-lg sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16 sm:h-20">
+                <div class="flex items-center space-x-3 sm:space-x-4">
+                    <a href="index.html" class="flex items-center space-x-3 group">
+                        <div class="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-emerald-500 to-cyan-600 rounded-xl flex items-center justify-center">
+                            <i class="fas fa-kaaba text-white text-lg sm:text-xl"></i>
+                        </div>
+                        <div>
+                            <span class="text-lg sm:text-xl font-bold display-font bg-gradient-to-r from-emerald-700 to-cyan-600 bg-clip-text text-transparent">UmrahFlex</span>
+                            <p class="text-xs text-gray-500 hidden sm:block">Office Management</p>
+                        </div>
+                    </a>
+                </div>
+
+                <div class="flex items-center space-x-2 sm:space-x-4">
+                    <a href="admin-panel.html" class="text-gray-600 hover:text-emerald-600 transition px-2 sm:px-3 py-2 rounded-lg hover:bg-emerald-50">
+                        <i class="fas fa-chart-line mr-1"></i><span class="hidden sm:inline">Dashboard</span>
+                    </a>
+                    <a href="team-management.html" class="text-gray-600 hover:text-emerald-600 transition px-2 sm:px-3 py-2 rounded-lg hover:bg-emerald-50">
+                        <i class="fas fa-users mr-1"></i><span class="hidden sm:inline">Team</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+        <!-- Header -->
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
+            <div>
+                <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 display-font">Office Management</h1>
+                <p class="text-gray-600 mt-1">Manage office locations and details</p>
+            </div>
+            <button onclick="openOfficeModal()" class="w-full sm:w-auto bg-gradient-to-r from-emerald-600 to-cyan-600 text-white px-6 py-3 rounded-lg hover:shadow-lg transition font-medium">
+                <i class="fas fa-plus mr-2"></i>Add New Office
+            </button>
+        </div>
+
+        <!-- Offices Grid -->
+        <div id="officesContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <!-- Offices will be loaded here -->
+        </div>
+    </div>
+
+    <!-- Add/Edit Office Modal -->
+    <div id="officeModal" class="modal fixed inset-0 bg-black bg-opacity-50 items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div class="sticky top-0 bg-white border-b border-gray-200 p-6 z-10">
+                <div class="flex justify-between items-center">
+                    <h3 id="modalTitle" class="text-2xl font-bold text-gray-900 display-font">Add New Office</h3>
+                    <button onclick="closeOfficeModal()" class="text-gray-400 hover:text-gray-600 w-10 h-10 rounded-lg hover:bg-gray-100 transition">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </div>
+
+            <form id="officeForm" class="p-6 space-y-6">
+                <input type="hidden" id="officeId">
+
+                <!-- Office Information -->
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Office Name *</label>
+                        <input type="text" id="officeName" required placeholder="e.g., UmrahFlex Lahore Main" class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-emerald-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">City *</label>
+                        <select id="officeCity" required class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-emerald-500">
+                            <option value="">Select City</option>
+                            <option value="Lahore">Lahore</option>
+                            <option value="Karachi">Karachi</option>
+                            <option value="Islamabad">Islamabad</option>
+                            <option value="Rawalpindi">Rawalpindi</option>
+                            <option value="Faisalabad">Faisalabad</option>
+                            <option value="Multan">Multan</option>
+                            <option value="Peshawar">Peshawar</option>
+                            <option value="Quetta">Quetta</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Address</label>
+                        <textarea id="officeAddress" rows="3" placeholder="Complete address with landmarks" class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-emerald-500"></textarea>
+                    </div>
+                </div>
+
+                <!-- Contact Information -->
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Office Phone</label>
+                        <input type="tel" id="officePhone" placeholder="+92-42-1234567" class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-emerald-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Office Email</label>
+                        <input type="email" id="officeEmail" placeholder="office@umrahflex.com" class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-emerald-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Manager Name</label>
+                        <input type="text" id="managerName" placeholder="Manager's full name" class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-emerald-500">
+                    </div>
+                </div>
+
+                <!-- Status -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Status</label>
+                    <select id="officeStatus" class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-emerald-500">
+                        <option value="active">Active</option>
+                        <option value="inactive">Inactive</option>
+                    </select>
+                </div>
+
+                <!-- Form Actions -->
+                <div class="flex flex-col sm:flex-row gap-3 pt-4 border-t">
+                    <button type="submit" class="flex-1 bg-gradient-to-r from-emerald-600 to-cyan-600 text-white px-6 py-3 rounded-lg hover:shadow-lg transition font-medium">
+                        <i class="fas fa-save mr-2"></i>Save Office
+                    </button>
+                    <button type="button" onclick="closeOfficeModal()" class="flex-1 bg-gray-200 text-gray-700 px-6 py-3 rounded-lg hover:bg-gray-300 transition font-medium">
+                        Cancel
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- API Service -->
+    <script src="https://app.umrahflex.com/api-service.js"></script>
+
+    <script>
+        let allOffices = [];
+        
+        // Load on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            loadOffices();
+        });
+
+        // Load offices
+        async function loadOffices() {
+            API.Utils.showLoading('officesContainer');
+            allOffices = await API.Offices.getAll();
+            displayOffices(allOffices);
+        }
+
+        // Display offices
+        function displayOffices(offices) {
+            const container = document.getElementById('officesContainer');
+            
+            if (!offices || offices.length === 0) {
+                container.innerHTML = `
+                    <div class="col-span-full text-center py-12">
+                        <i class="fas fa-building text-6xl text-gray-300 mb-4"></i>
+                        <p class="text-gray-500 text-lg">No offices found</p>
+                        <button onclick="openOfficeModal()" class="mt-4 text-emerald-600 hover:text-emerald-700 font-medium">
+                            <i class="fas fa-plus mr-2"></i>Add Your First Office
+                        </button>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = offices.map(office => {
+                const cityIcons = {
+                    'Lahore': 'fa-landmark',
+                    'Karachi': 'fa-ship',
+                    'Islamabad': 'fa-mountain'
+                };
+                const iconClass = cityIcons[office.office_city] || 'fa-building';
+                
+                return `
+                    <div class="bg-white rounded-xl shadow-md overflow-hidden animate-fade-in">
+                        <div class="bg-gradient-to-r from-emerald-600 to-cyan-600 p-6 text-white">
+                            <div class="flex items-start justify-between">
+                                <div class="flex items-center space-x-3">
+                                    <div class="w-12 h-12 bg-white bg-opacity-20 rounded-lg flex items-center justify-center">
+                                        <i class="fas ${iconClass} text-2xl"></i>
+                                    </div>
+                                    <div>
+                                        <h3 class="font-bold text-lg">${office.office_name}</h3>
+                                        <p class="text-sm opacity-90">${office.office_city}</p>
+                                    </div>
+                                </div>
+                                <span class="px-3 py-1 rounded-full text-xs font-medium ${
+                                    office.status === 'active' ? 'bg-emerald-400' : 'bg-gray-400'
+                                }">
+                                    ${office.status === 'active' ? 'Active' : 'Inactive'}
+                                </span>
+                            </div>
+                        </div>
+                        
+                        <div class="p-6 space-y-3">
+                            ${office.office_address ? `
+                                <div class="flex items-start text-sm text-gray-600">
+                                    <i class="fas fa-map-marker-alt w-5 text-emerald-600 mt-1"></i>
+                                    <span>${office.office_address}</span>
+                                </div>
+                            ` : ''}
+                            
+                            ${office.office_phone ? `
+                                <div class="flex items-center text-sm text-gray-600">
+                                    <i class="fas fa-phone w-5 text-emerald-600"></i>
+                                    <span>${office.office_phone}</span>
+                                </div>
+                            ` : ''}
+                            
+                            ${office.office_email ? `
+                                <div class="flex items-center text-sm text-gray-600">
+                                    <i class="fas fa-envelope w-5 text-cyan-600"></i>
+                                    <span>${office.office_email}</span>
+                                </div>
+                            ` : ''}
+                            
+                            ${office.manager_name ? `
+                                <div class="flex items-center text-sm text-gray-600">
+                                    <i class="fas fa-user-tie w-5 text-amber-600"></i>
+                                    <span>${office.manager_name}</span>
+                                </div>
+                            ` : ''}
+                            
+                            <div class="flex gap-2 pt-4 border-t">
+                                <button onclick="editOffice(${office.office_id})" class="flex-1 bg-emerald-50 text-emerald-600 px-4 py-2 rounded-lg hover:bg-emerald-100 transition font-medium">
+                                    <i class="fas fa-edit mr-1"></i>Edit
+                                </button>
+                                <button onclick="deleteOffice(${office.office_id})" class="flex-1 bg-red-50 text-red-600 px-4 py-2 rounded-lg hover:bg-red-100 transition font-medium">
+                                    <i class="fas fa-trash mr-1"></i>Delete
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Open modal
+        function openOfficeModal(officeId = null) {
+            document.getElementById('modalTitle').textContent = officeId ? 'Edit Office' : 'Add New Office';
+            document.getElementById('officeModal').classList.add('active');
+            document.body.classList.add('overflow-hidden');
+            
+            if (officeId) {
+                loadOfficeData(officeId);
+            } else {
+                document.getElementById('officeForm').reset();
+                document.getElementById('officeId').value = '';
+            }
+        }
+
+        // Close modal
+        function closeOfficeModal() {
+            document.getElementById('officeModal').classList.remove('active');
+            document.body.classList.remove('overflow-hidden');
+            document.getElementById('officeForm').reset();
+        }
+
+        // Load office data
+        async function loadOfficeData(officeId) {
+            const office = await API.Offices.getById(officeId);
+            if (!office) return;
+            
+            document.getElementById('officeId').value = office.office_id;
+            document.getElementById('officeName').value = office.office_name;
+            document.getElementById('officeCity').value = office.office_city;
+            document.getElementById('officeAddress').value = office.office_address || '';
+            document.getElementById('officePhone').value = office.office_phone || '';
+            document.getElementById('officeEmail').value = office.office_email || '';
+            document.getElementById('managerName').value = office.manager_name || '';
+            document.getElementById('officeStatus').value = office.status;
+        }
+
+        // Edit office
+        function editOffice(officeId) {
+            openOfficeModal(officeId);
+        }
+
+        // Delete office
+        async function deleteOffice(officeId) {
+            const success = await API.Offices.delete(officeId);
+            if (success) {
+                loadOffices();
+            }
+        }
+
+        // Submit form
+        document.getElementById('officeForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const officeId = document.getElementById('officeId').value;
+            const officeData = {
+                office_name: document.getElementById('officeName').value,
+                office_city: document.getElementById('officeCity').value,
+                office_address: document.getElementById('officeAddress').value || null,
+                office_phone: document.getElementById('officePhone').value || null,
+                office_email: document.getElementById('officeEmail').value || null,
+                manager_name: document.getElementById('managerName').value || null,
+                status: document.getElementById('officeStatus').value
+            };
+            
+            let result;
+            if (officeId) {
+                result = await API.Offices.update(officeId, officeData);
+            } else {
+                result = await API.Offices.create(officeData);
+            }
+            
+            if (result) {
+                closeOfficeModal();
+                loadOffices();
+            }
+        });
+    </script>
+</body>
+</html>
