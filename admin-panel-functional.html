@@ -68,9 +68,12 @@
                     <button onclick="refreshDashboard()" class="text-gray-600 hover:text-emerald-600 transition px-2 sm:px-3 py-2 rounded-lg hover:bg-emerald-50">
                         <i class="fas fa-sync-alt mr-1"></i><span class="hidden sm:inline">Refresh</span>
                     </button>
-                    <a href="packages-functional.html" class="text-gray-600 hover:text-emerald-600 transition px-2 sm:px-3 py-2 rounded-lg hover:bg-emerald-50">
+
+                    <!-- UPDATED: packages.html -->
+                    <a href="packages.html" class="text-gray-600 hover:text-emerald-600 transition px-2 sm:px-3 py-2 rounded-lg hover:bg-emerald-50">
                         <i class="fas fa-box mr-1"></i><span class="hidden sm:inline">Packages</span>
                     </a>
+
                     <a href="inbox.html" class="text-gray-600 hover:text-emerald-600 transition px-2 sm:px-3 py-2 rounded-lg hover:bg-emerald-50">
                         <i class="fas fa-inbox mr-1"></i><span class="hidden sm:inline">Inbox</span>
                     </a>
@@ -166,22 +169,28 @@
 
         <!-- Quick Actions -->
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 animate-fade-in" style="animation-delay: 0.6s">
-            <a href="packages-functional.html" class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition text-center">
+            <!-- UPDATED: packages.html -->
+            <a href="packages.html" class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition text-center">
                 <i class="fas fa-box text-4xl text-emerald-600 mb-3"></i>
                 <h4 class="font-bold text-gray-900">Packages</h4>
                 <p class="text-sm text-gray-500">Manage packages</p>
             </a>
+
             <a href="inbox.html" class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition text-center">
                 <i class="fas fa-inbox text-4xl text-cyan-600 mb-3"></i>
                 <h4 class="font-bold text-gray-900">Inbox</h4>
                 <p class="text-sm text-gray-500">View leads</p>
             </a>
-            <a href="team-management.html" class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition text-center">
+
+            <!-- UPDATED: team.html -->
+            <a href="team.html" class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition text-center">
                 <i class="fas fa-users text-4xl text-amber-600 mb-3"></i>
                 <h4 class="font-bold text-gray-900">Team</h4>
                 <p class="text-sm text-gray-500">Manage team</p>
             </a>
-            <a href="office-management.html" class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition text-center">
+
+            <!-- UPDATED: offices.html -->
+            <a href="offices.html" class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition text-center">
                 <i class="fas fa-building text-4xl text-purple-600 mb-3"></i>
                 <h4 class="font-bold text-gray-900">Offices</h4>
                 <p class="text-sm text-gray-500">Manage offices</p>
@@ -276,16 +285,12 @@
                     responsive: true,
                     maintainAspectRatio: false,
                     plugins: {
-                        legend: {
-                            display: false
-                        }
+                        legend: { display: false }
                     },
                     scales: {
                         y: {
                             beginAtZero: true,
-                            ticks: {
-                                precision: 0
-                            }
+                            ticks: { precision: 0 }
                         }
                     }
                 }
@@ -328,11 +333,7 @@
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            position: 'bottom'
-                        }
-                    }
+                    plugins: { legend: { position: 'bottom' } }
                 }
             });
         }
