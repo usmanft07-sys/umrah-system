@@ -6,16 +6,44 @@
     <title>Dashboard - UmrahFlex CRM</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Playfair+Display:wght@600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
-        body { font-family: 'Inter', sans-serif; }
-        .stat-card {
-            transition: transform 0.2s, box-shadow 0.2s;
+        :root {
+            --primary: #047857;
+            --secondary: #d97706;
+            --accent: #0891b2;
+            --gold: #f59e0b;
         }
-        .stat-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        
+        body { font-family: 'Poppins', sans-serif; }
+        .display-font { font-family: 'Playfair Display', serif; }
+        
+        .stat-card { 
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
+        }
+        
+        .stat-card:hover { 
+            transform: translateY(-5px); 
+            box-shadow: 0 15px 30px rgba(0,0,0,0.12); 
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .animate-fade-in {
+            animation: fadeIn 0.4s ease-out;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        .pulse {
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
         }
     </style>
 </head>
@@ -23,532 +51,308 @@
     <!-- Navigation -->
     <nav class="bg-white shadow-lg sticky top-0 z-50">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between items-center h-16">
-                <div class="flex items-center space-x-4">
-                    <a href="index.html" class="flex items-center">
-                        <i class="fas fa-kaaba text-2xl text-purple-600 mr-2"></i>
-                        <span class="text-xl font-bold text-gray-800">UmrahFlex CRM</span>
+            <div class="flex justify-between items-center h-16 sm:h-20">
+                <div class="flex items-center space-x-3 sm:space-x-4">
+                    <a href="index.html" class="flex items-center space-x-3 group">
+                        <div class="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-emerald-500 to-cyan-600 rounded-xl flex items-center justify-center">
+                            <i class="fas fa-kaaba text-white text-lg sm:text-xl"></i>
+                        </div>
+                        <div>
+                            <span class="text-lg sm:text-xl font-bold display-font bg-gradient-to-r from-emerald-700 to-cyan-600 bg-clip-text text-transparent">UmrahFlex</span>
+                            <p class="text-xs text-gray-500 hidden sm:block">Admin Dashboard</p>
+                        </div>
                     </a>
-                    <span class="text-gray-300">|</span>
-                    <span class="text-gray-600 font-medium">Dashboard</span>
                 </div>
-                <div class="flex items-center space-x-4">
-                    <button onclick="refreshDashboard()" class="text-gray-600 hover:text-purple-600 transition">
-                        <i class="fas fa-sync-alt mr-1"></i> Refresh
+
+                <div class="flex items-center space-x-2 sm:space-x-4">
+                    <button onclick="refreshDashboard()" class="text-gray-600 hover:text-emerald-600 transition px-2 sm:px-3 py-2 rounded-lg hover:bg-emerald-50">
+                        <i class="fas fa-sync-alt mr-1"></i><span class="hidden sm:inline">Refresh</span>
                     </button>
-                    <a href="packages.html" class="text-gray-600 hover:text-purple-600 transition">
-                        <i class="fas fa-box-open mr-1"></i> Packages
+
+                    <!-- UPDATED: packages.html -->
+                    <a href="packages.html" class="text-gray-600 hover:text-emerald-600 transition px-2 sm:px-3 py-2 rounded-lg hover:bg-emerald-50">
+                        <i class="fas fa-box mr-1"></i><span class="hidden sm:inline">Packages</span>
                     </a>
-                    <a href="inbox.html" class="text-gray-600 hover:text-purple-600 transition">
-                        <i class="fas fa-inbox mr-1"></i> Inbox
-                    </a>
-                    <a href="index.html" class="text-gray-600 hover:text-purple-600 transition">
-                        <i class="fas fa-home mr-1"></i> Home
+
+                    <a href="inbox.html" class="text-gray-600 hover:text-emerald-600 transition px-2 sm:px-3 py-2 rounded-lg hover:bg-emerald-50">
+                        <i class="fas fa-inbox mr-1"></i><span class="hidden sm:inline">Inbox</span>
                     </a>
                 </div>
             </div>
         </div>
     </nav>
 
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
         <!-- Header -->
         <div class="mb-8">
-            <h1 class="text-3xl font-bold text-gray-900">📊 Dashboard Overview</h1>
-            <p class="text-gray-600 mt-1">Real-time business intelligence and analytics</p>
+            <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 display-font">Dashboard Overview</h1>
+            <p class="text-gray-600 mt-1">Real-time business analytics and insights</p>
         </div>
 
-        <!-- Main Statistics Grid -->
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            <!-- Total Packages -->
-            <div class="stat-card bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl shadow-lg p-6 text-white">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-blue-100 text-sm font-medium uppercase">Total Packages</p>
-                        <p id="statTotalPackages" class="text-4xl font-bold mt-2">--</p>
-                        <p class="text-blue-100 text-sm mt-2">
-                            <span id="statActivePackages" class="font-semibold">--</span> Active
-                        </p>
-                    </div>
-                    <div class="bg-white bg-opacity-20 rounded-full p-4">
-                        <i class="fas fa-box-open text-4xl"></i>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Total Leads -->
-            <div class="stat-card bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl shadow-lg p-6 text-white">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-purple-100 text-sm font-medium uppercase">Total Leads</p>
-                        <p id="statTotalLeads" class="text-4xl font-bold mt-2">--</p>
-                        <p class="text-purple-100 text-sm mt-2">
-                            <span id="statNewLeads" class="font-semibold">--</span> New
-                        </p>
-                    </div>
-                    <div class="bg-white bg-opacity-20 rounded-full p-4">
-                        <i class="fas fa-users text-4xl"></i>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Conversion Rate -->
-            <div class="stat-card bg-gradient-to-br from-green-500 to-green-600 rounded-xl shadow-lg p-6 text-white">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-green-100 text-sm font-medium uppercase">Converted</p>
-                        <p id="statConvertedLeads" class="text-4xl font-bold mt-2">--</p>
-                        <p class="text-green-100 text-sm mt-2">
-                            <span id="statConversionRate" class="font-semibold">--</span>% Rate
-                        </p>
-                    </div>
-                    <div class="bg-white bg-opacity-20 rounded-full p-4">
-                        <i class="fas fa-trophy text-4xl"></i>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Team Size -->
-            <div class="stat-card bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl shadow-lg p-6 text-white">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-orange-100 text-sm font-medium uppercase">Team Members</p>
-                        <p id="statTotalTeam" class="text-4xl font-bold mt-2">--</p>
-                        <p class="text-orange-100 text-sm mt-2">
-                            <span id="statTotalOffices" class="font-semibold">--</span> Offices
-                        </p>
-                    </div>
-                    <div class="bg-white bg-opacity-20 rounded-full p-4">
-                        <i class="fas fa-user-tie text-4xl"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Secondary Stats -->
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-            <div class="bg-white rounded-lg shadow p-4">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-sm text-gray-500">Qualified</p>
-                        <p id="statQualified" class="text-2xl font-bold text-green-600">--</p>
-                    </div>
-                    <i class="fas fa-check-circle text-2xl text-green-500"></i>
-                </div>
-            </div>
-
-            <div class="bg-white rounded-lg shadow p-4">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-sm text-gray-500">Contacted</p>
-                        <p id="statContacted" class="text-2xl font-bold text-yellow-600">--</p>
-                    </div>
-                    <i class="fas fa-phone text-2xl text-yellow-500"></i>
-                </div>
-            </div>
-
-            <div class="bg-white rounded-lg shadow p-4">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-sm text-gray-500">High Priority</p>
-                        <p id="statHighPriority" class="text-2xl font-bold text-red-600">--</p>
-                    </div>
-                    <i class="fas fa-exclamation-circle text-2xl text-red-500"></i>
-                </div>
-            </div>
-
-            <div class="bg-white rounded-lg shadow p-4">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-sm text-gray-500">Lost</p>
-                        <p id="statLost" class="text-2xl font-bold text-gray-600">--</p>
-                    </div>
-                    <i class="fas fa-times-circle text-2xl text-gray-500"></i>
-                </div>
-            </div>
-        </div>
-
-        <!-- Charts and Recent Activity -->
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-            <!-- Lead Status Distribution -->
-            <div class="bg-white rounded-xl shadow-lg p-6">
-                <h3 class="text-lg font-bold text-gray-900 mb-4">Lead Status Distribution</h3>
-                <canvas id="leadStatusChart" height="200"></canvas>
-            </div>
-
-            <!-- Package Distribution -->
-            <div class="bg-white rounded-xl shadow-lg p-6">
-                <h3 class="text-lg font-bold text-gray-900 mb-4">Packages by Airport</h3>
-                <canvas id="packageChart" height="200"></canvas>
-            </div>
-        </div>
-
-        <!-- Recent Activity -->
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <!-- Recent Leads -->
-            <div class="bg-white rounded-xl shadow-lg p-6">
+        <!-- Stats Cards -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <!-- Packages -->
+            <div class="stat-card bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-xl p-6 text-white animate-fade-in">
                 <div class="flex items-center justify-between mb-4">
-                    <h3 class="text-lg font-bold text-gray-900">Recent Leads</h3>
-                    <a href="inbox.html" class="text-purple-600 hover:text-purple-700 text-sm font-medium">
-                        View All →
-                    </a>
+                    <div class="w-12 h-12 bg-white bg-opacity-20 rounded-lg flex items-center justify-center">
+                        <i class="fas fa-box-open text-2xl"></i>
+                    </div>
+                    <i id="packageLoading" class="fas fa-spinner fa-spin text-2xl pulse"></i>
                 </div>
-                <div id="recentLeadsList" class="space-y-3">
-                    <!-- Will be populated by JavaScript -->
+                <p class="text-2xl sm:text-3xl font-bold mb-1" id="totalPackages">0</p>
+                <p class="text-sm opacity-90">Total Packages</p>
+                <div class="mt-3 pt-3 border-t border-white border-opacity-20">
+                    <p class="text-xs"><span id="activePackages">0</span> Active</p>
+                </div>
+            </div>
+
+            <!-- Leads -->
+            <div class="stat-card bg-gradient-to-br from-cyan-500 to-cyan-600 rounded-xl p-6 text-white animate-fade-in" style="animation-delay: 0.1s">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="w-12 h-12 bg-white bg-opacity-20 rounded-lg flex items-center justify-center">
+                        <i class="fas fa-users text-2xl"></i>
+                    </div>
+                    <i id="leadsLoading" class="fas fa-spinner fa-spin text-2xl pulse"></i>
+                </div>
+                <p class="text-2xl sm:text-3xl font-bold mb-1" id="totalLeads">0</p>
+                <p class="text-sm opacity-90">Total Leads</p>
+                <div class="mt-3 pt-3 border-t border-white border-opacity-20">
+                    <p class="text-xs"><span id="newLeads">0</span> New Today</p>
                 </div>
             </div>
 
-            <!-- Quick Actions -->
-            <div class="bg-white rounded-xl shadow-lg p-6">
-                <h3 class="text-lg font-bold text-gray-900 mb-4">Quick Actions</h3>
-                <div class="space-y-3">
-                    <a href="packages.html" class="block bg-gradient-to-r from-blue-50 to-blue-100 hover:from-blue-100 hover:to-blue-200 rounded-lg p-4 transition">
-                        <div class="flex items-center">
-                            <div class="bg-blue-500 rounded-lg p-3 mr-4">
-                                <i class="fas fa-plus text-white text-xl"></i>
-                            </div>
-                            <div>
-                                <p class="font-semibold text-gray-900">Add New Package</p>
-                                <p class="text-sm text-gray-600">Create Umrah package</p>
-                            </div>
-                        </div>
-                    </a>
-
-                    <a href="inbox.html" class="block bg-gradient-to-r from-purple-50 to-purple-100 hover:from-purple-100 hover:to-purple-200 rounded-lg p-4 transition">
-                        <div class="flex items-center">
-                            <div class="bg-purple-500 rounded-lg p-3 mr-4">
-                                <i class="fas fa-inbox text-white text-xl"></i>
-                            </div>
-                            <div>
-                                <p class="font-semibold text-gray-900">View Inbox</p>
-                                <p class="text-sm text-gray-600">Manage customer leads</p>
-                            </div>
-                        </div>
-                    </a>
-
-                    <a href="packages.html" class="block bg-gradient-to-r from-green-50 to-green-100 hover:from-green-100 hover:to-green-200 rounded-lg p-4 transition">
-                        <div class="flex items-center">
-                            <div class="bg-green-500 rounded-lg p-3 mr-4">
-                                <i class="fas fa-list text-white text-xl"></i>
-                            </div>
-                            <div>
-                                <p class="font-semibold text-gray-900">All Packages</p>
-                                <p class="text-sm text-gray-600">View and manage packages</p>
-                            </div>
-                        </div>
-                    </a>
-
-                    <button onclick="refreshDashboard()" class="block w-full bg-gradient-to-r from-orange-50 to-orange-100 hover:from-orange-100 hover:to-orange-200 rounded-lg p-4 transition">
-                        <div class="flex items-center">
-                            <div class="bg-orange-500 rounded-lg p-3 mr-4">
-                                <i class="fas fa-sync-alt text-white text-xl"></i>
-                            </div>
-                            <div class="text-left">
-                                <p class="font-semibold text-gray-900">Refresh Dashboard</p>
-                                <p class="text-sm text-gray-600">Update all statistics</p>
-                            </div>
-                        </div>
-                    </button>
+            <!-- Team -->
+            <div class="stat-card bg-gradient-to-br from-amber-500 to-amber-600 rounded-xl p-6 text-white animate-fade-in" style="animation-delay: 0.2s">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="w-12 h-12 bg-white bg-opacity-20 rounded-lg flex items-center justify-center">
+                        <i class="fas fa-user-friends text-2xl"></i>
+                    </div>
+                    <i id="teamLoading" class="fas fa-spinner fa-spin text-2xl pulse"></i>
+                </div>
+                <p class="text-2xl sm:text-3xl font-bold mb-1" id="totalTeam">0</p>
+                <p class="text-sm opacity-90">Team Members</p>
+                <div class="mt-3 pt-3 border-t border-white border-opacity-20">
+                    <p class="text-xs"><span id="activeTeam">0</span> Active</p>
                 </div>
             </div>
+
+            <!-- Deals -->
+            <div class="stat-card bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl p-6 text-white animate-fade-in" style="animation-delay: 0.3s">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="w-12 h-12 bg-white bg-opacity-20 rounded-lg flex items-center justify-center">
+                        <i class="fas fa-handshake text-2xl"></i>
+                    </div>
+                    <i id="dealsLoading" class="fas fa-spinner fa-spin text-2xl pulse"></i>
+                </div>
+                <p class="text-2xl sm:text-3xl font-bold mb-1" id="dealsWon">0</p>
+                <p class="text-sm opacity-90">Deals Won</p>
+                <div class="mt-3 pt-3 border-t border-white border-opacity-20">
+                    <p class="text-xs"><span id="contactedLeads">0</span> In Progress</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Charts Section -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+            <!-- Leads by Airport -->
+            <div class="bg-white rounded-xl shadow-md p-6 animate-fade-in" style="animation-delay: 0.4s">
+                <h3 class="text-lg font-bold text-gray-900 mb-4">Leads by Airport</h3>
+                <canvas id="airportChart" style="max-height: 300px;"></canvas>
+            </div>
+
+            <!-- Lead Status -->
+            <div class="bg-white rounded-xl shadow-md p-6 animate-fade-in" style="animation-delay: 0.5s">
+                <h3 class="text-lg font-bold text-gray-900 mb-4">Lead Status Distribution</h3>
+                <canvas id="statusChart" style="max-height: 300px;"></canvas>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 animate-fade-in" style="animation-delay: 0.6s">
+            <!-- UPDATED: packages.html -->
+            <a href="packages.html" class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition text-center">
+                <i class="fas fa-box text-4xl text-emerald-600 mb-3"></i>
+                <h4 class="font-bold text-gray-900">Packages</h4>
+                <p class="text-sm text-gray-500">Manage packages</p>
+            </a>
+
+            <a href="inbox.html" class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition text-center">
+                <i class="fas fa-inbox text-4xl text-cyan-600 mb-3"></i>
+                <h4 class="font-bold text-gray-900">Inbox</h4>
+                <p class="text-sm text-gray-500">View leads</p>
+            </a>
+
+            <!-- UPDATED: team.html -->
+            <a href="team.html" class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition text-center">
+                <i class="fas fa-users text-4xl text-amber-600 mb-3"></i>
+                <h4 class="font-bold text-gray-900">Team</h4>
+                <p class="text-sm text-gray-500">Manage team</p>
+            </a>
+
+            <!-- UPDATED: offices.html -->
+            <a href="offices.html" class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition text-center">
+                <i class="fas fa-building text-4xl text-purple-600 mb-3"></i>
+                <h4 class="font-bold text-gray-900">Offices</h4>
+                <p class="text-sm text-gray-500">Manage offices</p>
+            </a>
         </div>
     </div>
 
+    <!-- API Service -->
+    <script src="https://app.umrahflex.com/api-service.js"></script>
+
     <script>
-        // =========================
-        // ✅ API CONFIG
-        // =========================
-        const API_URL = 'http://localhost:3000/api';
+        let airportChart, statusChart;
 
-        async function apiFetch(path, options = {}) {
-            const res = await fetch(`${API_URL}${path}`, {
-                headers: { 'Content-Type': 'application/json', ...(options.headers || {}) },
-                ...options,
-            });
+        // Load dashboard on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            loadDashboard();
+        });
 
-            const text = await res.text();
-            let data;
-            try { data = text ? JSON.parse(text) : null; } catch { data = text; }
-
-            if (!res.ok) throw new Error((data && data.error) ? data.error : (data || `HTTP ${res.status}`));
-            return data;
-        }
-
-        // =========================
-        // ✅ STATE
-        // =========================
-        let dashboardData = {
-            packages: [],
-            leads: [],
-            offices: [],
-            teams: []
-        };
-
-        let leadStatusChart = null;
-        let packageChart = null;
-
-        // =========================
-        // ✅ LOAD DATA
-        // =========================
-        async function loadDashboardData() {
-            try {
-                // Load all data in parallel
-                const [packages, leads, offices, teams] = await Promise.all([
-                    apiFetch('/packages'),
-                    apiFetch('/leads'),
-                    apiFetch('/offices'),
-                    apiFetch('/teams')
-                ]);
-
-                dashboardData = {
-                    packages: Array.isArray(packages) ? packages : [],
-                    leads: Array.isArray(leads) ? leads : [],
-                    offices: Array.isArray(offices) ? offices : [],
-                    teams: Array.isArray(teams) ? teams : []
-                };
-
-                updateStatistics();
-                updateCharts();
-                updateRecentLeads();
-            } catch (err) {
-                console.error('Failed to load dashboard data:', err);
-                alert('❌ Failed to load dashboard data. Please check your connection.');
-            }
-        }
-
-        // =========================
-        // ✅ UPDATE STATISTICS
-        // =========================
-        function updateStatistics() {
-            const { packages, leads, offices, teams } = dashboardData;
-
-            // Package stats
-            const totalPackages = packages.length;
-            const activePackages = packages.filter(p => p.status === 'Active').length;
-            document.getElementById('statTotalPackages').textContent = totalPackages;
-            document.getElementById('statActivePackages').textContent = activePackages;
-
-            // Lead stats
-            const totalLeads = leads.length;
-            const newLeads = leads.filter(l => l.status === 'new').length;
-            const contactedLeads = leads.filter(l => l.status === 'contacted').length;
-            const qualifiedLeads = leads.filter(l => l.status === 'qualified').length;
-            const convertedLeads = leads.filter(l => l.status === 'converted').length;
-            const lostLeads = leads.filter(l => l.status === 'lost').length;
-            const highPriorityLeads = leads.filter(l => l.priority === 'high').length;
-
-            document.getElementById('statTotalLeads').textContent = totalLeads;
-            document.getElementById('statNewLeads').textContent = newLeads;
-            document.getElementById('statConvertedLeads').textContent = convertedLeads;
-            document.getElementById('statQualified').textContent = qualifiedLeads;
-            document.getElementById('statContacted').textContent = contactedLeads;
-            document.getElementById('statLost').textContent = lostLeads;
-            document.getElementById('statHighPriority').textContent = highPriorityLeads;
-
-            // Conversion rate
-            const conversionRate = totalLeads > 0 ? ((convertedLeads / totalLeads) * 100).toFixed(1) : 0;
-            document.getElementById('statConversionRate').textContent = conversionRate;
-
-            // Team stats
-            document.getElementById('statTotalTeam').textContent = teams.length;
-            document.getElementById('statTotalOffices').textContent = offices.length;
-        }
-
-        // =========================
-        // ✅ UPDATE CHARTS
-        // =========================
-        function updateCharts() {
-            const { packages, leads } = dashboardData;
-
-            // Lead Status Chart
-            const statusCounts = {
-                new: leads.filter(l => l.status === 'new').length,
-                contacted: leads.filter(l => l.status === 'contacted').length,
-                qualified: leads.filter(l => l.status === 'qualified').length,
-                converted: leads.filter(l => l.status === 'converted').length,
-                lost: leads.filter(l => l.status === 'lost').length
-            };
-
-            if (leadStatusChart) leadStatusChart.destroy();
+        // Load dashboard data
+        async function loadDashboard() {
+            const stats = await API.Dashboard.getStats();
             
-            const ctx1 = document.getElementById('leadStatusChart');
-            leadStatusChart = new Chart(ctx1, {
-                type: 'doughnut',
-                data: {
-                    labels: ['New', 'Contacted', 'Qualified', 'Converted', 'Lost'],
-                    datasets: [{
-                        data: [
-                            statusCounts.new,
-                            statusCounts.contacted,
-                            statusCounts.qualified,
-                            statusCounts.converted,
-                            statusCounts.lost
-                        ],
-                        backgroundColor: [
-                            '#3b82f6', // blue
-                            '#eab308', // yellow
-                            '#10b981', // green
-                            '#8b5cf6', // purple
-                            '#ef4444'  // red
-                        ],
-                        borderWidth: 2,
-                        borderColor: '#ffffff'
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            position: 'bottom'
-                        }
-                    }
+            if (!stats) return;
+
+            // Hide loading spinners
+            document.getElementById('packageLoading').style.display = 'none';
+            document.getElementById('leadsLoading').style.display = 'none';
+            document.getElementById('teamLoading').style.display = 'none';
+            document.getElementById('dealsLoading').style.display = 'none';
+
+            // Update stats
+            animateValue('totalPackages', 0, stats.totalPackages, 1000);
+            animateValue('activePackages', 0, stats.activePackages, 1000);
+            animateValue('totalLeads', 0, stats.totalLeads, 1000);
+            animateValue('newLeads', 0, stats.newLeads, 1000);
+            animateValue('totalTeam', 0, stats.totalTeam, 1000);
+            animateValue('activeTeam', 0, stats.activeTeam, 1000);
+            animateValue('dealsWon', 0, stats.dealsWon, 1000);
+            animateValue('contactedLeads', 0, stats.contactedLeads, 1000);
+
+            // Create charts
+            createAirportChart(stats.leadsByAirport);
+            createStatusChart(stats.leadsByStatus);
+        }
+
+        // Animate number counting
+        function animateValue(id, start, end, duration) {
+            const element = document.getElementById(id);
+            const range = end - start;
+            const increment = range / (duration / 16);
+            let current = start;
+            
+            const timer = setInterval(() => {
+                current += increment;
+                if ((increment > 0 && current >= end) || (increment < 0 && current <= end)) {
+                    current = end;
+                    clearInterval(timer);
                 }
-            });
+                element.textContent = Math.round(current);
+            }, 16);
+        }
 
-            // Package by Airport Chart
-            const airportCounts = {};
-            packages.forEach(p => {
-                const airport = p.departure_airport || 'Unknown';
-                airportCounts[airport] = (airportCounts[airport] || 0) + 1;
-            });
-
-            if (packageChart) packageChart.destroy();
-
-            const ctx2 = document.getElementById('packageChart');
-            packageChart = new Chart(ctx2, {
+        // Create airport chart
+        function createAirportChart(data) {
+            const ctx = document.getElementById('airportChart').getContext('2d');
+            
+            if (airportChart) {
+                airportChart.destroy();
+            }
+            
+            airportChart = new Chart(ctx, {
                 type: 'bar',
                 data: {
-                    labels: Object.keys(airportCounts),
+                    labels: ['Lahore', 'Karachi', 'Islamabad'],
                     datasets: [{
-                        label: 'Packages',
-                        data: Object.values(airportCounts),
+                        label: 'Leads',
+                        data: [data.Lahore, data.Karachi, data.Islamabad],
                         backgroundColor: [
-                            '#3b82f6',
-                            '#8b5cf6',
-                            '#10b981',
-                            '#f59e0b',
-                            '#ef4444'
+                            'rgba(4, 120, 87, 0.8)',
+                            'rgba(8, 145, 178, 0.8)',
+                            'rgba(217, 119, 6, 0.8)'
                         ],
-                        borderRadius: 8
+                        borderColor: [
+                            'rgba(4, 120, 87, 1)',
+                            'rgba(8, 145, 178, 1)',
+                            'rgba(217, 119, 6, 1)'
+                        ],
+                        borderWidth: 2
                     }]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
                     plugins: {
-                        legend: {
-                            display: false
-                        }
+                        legend: { display: false }
                     },
                     scales: {
                         y: {
                             beginAtZero: true,
-                            ticks: {
-                                stepSize: 1
-                            }
+                            ticks: { precision: 0 }
                         }
                     }
                 }
             });
         }
 
-        // =========================
-        // ✅ UPDATE RECENT LEADS
-        // =========================
-        function updateRecentLeads() {
-            const { leads } = dashboardData;
-            const recentLeads = [...leads]
-                .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
-                .slice(0, 5);
-
-            const container = document.getElementById('recentLeadsList');
-
-            if (recentLeads.length === 0) {
-                container.innerHTML = `
-                    <div class="text-center py-8 text-gray-500">
-                        <i class="fas fa-inbox text-4xl mb-2"></i>
-                        <p>No leads yet</p>
-                    </div>
-                `;
-                return;
-            }
-
-            container.innerHTML = recentLeads.map(lead => {
-                const statusColors = {
-                    new: 'bg-blue-100 text-blue-800',
-                    contacted: 'bg-yellow-100 text-yellow-800',
-                    qualified: 'bg-green-100 text-green-800',
-                    converted: 'bg-purple-100 text-purple-800',
-                    lost: 'bg-red-100 text-red-800'
-                };
-
-                const priorityIcons = {
-                    high: '<i class="fas fa-exclamation-circle text-red-500"></i>',
-                    medium: '<i class="fas fa-exclamation-triangle text-orange-500"></i>',
-                    low: '<i class="fas fa-info-circle text-blue-500"></i>'
-                };
-
-                const timeAgo = getTimeAgo(new Date(lead.created_at));
-                const statusClass = statusColors[lead.status] || 'bg-gray-100 text-gray-800';
-
-                return `
-                    <div class="border border-gray-200 rounded-lg p-4 hover:border-purple-300 hover:shadow-md transition">
-                        <div class="flex items-start justify-between">
-                            <div class="flex-1">
-                                <div class="flex items-center space-x-2 mb-1">
-                                    <p class="font-semibold text-gray-900">${lead.customer_name || 'N/A'}</p>
-                                    ${priorityIcons[lead.priority] || ''}
-                                </div>
-                                <p class="text-sm text-gray-600 mb-2">
-                                    ${lead.wa_number ? `<i class="fab fa-whatsapp text-green-600"></i> ${lead.wa_number}` : ''}
-                                </p>
-                                <div class="flex items-center space-x-2">
-                                    <span class="px-2 py-1 rounded-full text-xs font-medium ${statusClass}">
-                                        ${(lead.status || 'new').toUpperCase()}
-                                    </span>
-                                    <span class="text-xs text-gray-500">${timeAgo}</span>
-                                </div>
-                            </div>
-                            <a href="inbox.html" class="text-purple-600 hover:text-purple-700">
-                                <i class="fas fa-arrow-right"></i>
-                            </a>
-                        </div>
-                    </div>
-                `;
-            }).join('');
-        }
-
-        // =========================
-        // ✅ UTILITY FUNCTIONS
-        // =========================
-        function getTimeAgo(date) {
-            const seconds = Math.floor((new Date() - date) / 1000);
+        // Create status chart
+        function createStatusChart(data) {
+            const ctx = document.getElementById('statusChart').getContext('2d');
             
-            if (seconds < 60) return 'Just now';
-            if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`;
-            if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`;
-            if (seconds < 604800) return `${Math.floor(seconds / 86400)}d ago`;
-            return date.toLocaleDateString();
-        }
-
-        function refreshDashboard() {
-            loadDashboardData();
-        }
-
-        // =========================
-        // ✅ INITIALIZE
-        // =========================
-        async function init() {
-            try {
-                await loadDashboardData();
-                console.log('✅ Dashboard loaded successfully');
-            } catch (err) {
-                console.error('❌ Dashboard initialization error:', err);
+            if (statusChart) {
+                statusChart.destroy();
             }
+            
+            statusChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['New', 'Contacted', 'Negotiating', 'Deal Done', 'Follow Up', 'Lost'],
+                    datasets: [{
+                        data: [
+                            data.new,
+                            data.contacted,
+                            data.negotiating,
+                            data.deal_done,
+                            data.follow_up,
+                            data.lost
+                        ],
+                        backgroundColor: [
+                            'rgba(4, 120, 87, 0.8)',
+                            'rgba(8, 145, 178, 0.8)',
+                            'rgba(217, 119, 6, 0.8)',
+                            'rgba(34, 197, 94, 0.8)',
+                            'rgba(245, 158, 11, 0.8)',
+                            'rgba(239, 68, 68, 0.8)'
+                        ],
+                        borderWidth: 2,
+                        borderColor: '#fff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { position: 'bottom' } }
+                }
+            });
         }
 
-        // Start
-        init();
+        // Refresh dashboard
+        function refreshDashboard() {
+            const refreshBtn = document.querySelector('[onclick="refreshDashboard()"] i');
+            refreshBtn.classList.add('fa-spin');
+            
+            // Show loading spinners
+            document.getElementById('packageLoading').style.display = 'block';
+            document.getElementById('leadsLoading').style.display = 'block';
+            document.getElementById('teamLoading').style.display = 'block';
+            document.getElementById('dealsLoading').style.display = 'block';
+            
+            loadDashboard().then(() => {
+                refreshBtn.classList.remove('fa-spin');
+            });
+        }
     </script>
 </body>
 </html>
