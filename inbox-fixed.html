@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inbox - UmrahFlex CRM</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        .modal { display: none; }
+        .modal.active { display: flex; }
+        .badge-new { background: #dbeafe; color: #1e40af; }
+        .badge-contacted { background: #fef3c7; color: #92400e; }
+        .badge-qualified { background: #d1fae5; color: #065f46; }
+        .badge-converted { background: #dcfce7; color: #166534; }
+        .badge-lost { background: #fee2e2; color: #991b1b; }
+        .badge-high { background: #fecaca; color: #991b1b; }
+        .badge-medium { background: #fed7aa; color: #9a3412; }
+        .badge-low { background: #e0e7ff; color: #3730a3; }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Navigation -->
+    <nav class="bg-white shadow-lg sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center space-x-4">
+                    <a href="index.html" class="flex items-center">
+                        <i class="fas fa-kaaba text-2xl text-purple-600 mr-2"></i>
+                        <span class="text-xl font-bold text-gray-800">UmrahFlex</span>
+                    </a>
+                    <span class="text-gray-300">|</span>
+                    <span class="text-gray-600 font-medium">Inbox</span>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <a href="admin-panel.html" class="text-gray-600 hover:text-purple-600 transition">
+                        <i class="fas fa-chart-line mr-1"></i> Dashboard
+                    </a>
+                    <a href="packages.html" class="text-gray-600 hover:text-purple-600 transition">
+                        <i class="fas fa-box-open mr-1"></i> Packages
+                    </a>
+                    <a href="index.html" class="text-gray-600 hover:text-purple-600 transition">
+                        <i class="fas fa-home mr-1"></i> Home
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Header -->
+        <div class="flex justify-between items-center mb-6">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-900">📬 Lead Inbox</h1>
+                <p class="text-gray-600 mt-1">Manage customer inquiries and follow-ups</p>
+            </div>
+            <button onclick="refreshLeads()" class="bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-lg font-semibold transition">
+                <i class="fas fa-sync-alt mr-2"></i>Refresh
+            </button>
+        </div>
+
+        <!-- Stats Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
+            <div class="bg-white rounded-lg shadow p-4">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm text-gray-500">Total Leads</p>
+                        <p id="statTotal" class="text-2xl font-bold text-gray-800">0</p>
+                    </div>
+                    <i class="fas fa-inbox text-3xl text-blue-500"></i>
+                </div>
+            </div>
+            <div class="bg-white rounded-lg shadow p-4">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm text-gray-500">New</p>
+                        <p id="statNew" class="text-2xl font-bold text-blue-600">0</p>
+                    </div>
+                    <i class="fas fa-envelope text-3xl text-blue-500"></i>
+                </div>
+            </div>
+            <div class="bg-white rounded-lg shadow p-4">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm text-gray-500">Contacted</p>
+                        <p id="statContacted" class="text-2xl font-bold text-yellow-600">0</p>
+                    </div>
+                    <i class="fas fa-phone text-3xl text-yellow-500"></i>
+                </div>
+            </div>
+            <div class="bg-white rounded-lg shadow p-4">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm text-gray-500">Qualified</p>
+                        <p id="statQualified" class="text-2xl font-bold text-green-600">0</p>
+                    </div>
+                    <i class="fas fa-check-circle text-3xl text-green-500"></i>
+                </div>
+            </div>
+            <div class="bg-white rounded-lg shadow p-4">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm text-gray-500">Converted</p>
+                        <p id="statConverted" class="text-2xl font-bold text-purple-600">0</p>
+                    </div>
+                    <i class="fas fa-trophy text-3xl text-purple-500"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filters -->
+        <div class="bg-white rounded-lg shadow-md p-4 mb-6">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                    <select id="filterStatus" onchange="applyFilters()" class="w-full border border-gray-300 rounded-lg px-3 py-2">
+                        <option value="">All Status</option>
+                        <option value="new">New</option>
+                        <option value="contacted">Contacted</option>
+                        <option value="qualified">Qualified</option>
+                        <option value="converted">Converted</option>
+                        <option value="lost">Lost</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Priority</label>
+                    <select id="filterPriority" onchange="applyFilters()" class="w-full border border-gray-300 rounded-lg px-3 py-2">
+                        <option value="">All Priority</option>
+                        <option value="high">High</option>
+                        <option value="medium">Medium</option>
+                        <option value="low">Low</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Office</label>
+                    <select id="filterOffice" onchange="applyFilters()" class="w-full border border-gray-300 rounded-lg px-3 py-2">
+                        <option value="">All Offices</option>
+                        <!-- Will be populated from API -->
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Search</label>
+                    <input type="text" id="searchLead" onkeyup="applySearchLocal()" placeholder="Search name, phone, email..."
+                           class="w-full border border-gray-300 rounded-lg px-3 py-2">
+                </div>
+            </div>
+        </div>
+
+        <!-- Leads Table -->
+        <div class="bg-white rounded-lg shadow-md overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">ID</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Customer</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Contact</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Interest</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Priority</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Assigned To</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Office</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Created</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="leadsTableBody" class="bg-white divide-y divide-gray-200">
+                        <!-- API data will render here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Lead Detail Modal -->
+    <div id="leadModal" class="modal fixed inset-0 bg-black bg-opacity-50 items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div class="sticky top-0 bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-8 py-6 rounded-t-2xl">
+                <h2 class="text-2xl font-bold">Lead Details</h2>
+                <p class="text-purple-100 text-sm mt-1">Complete customer information</p>
+            </div>
+
+            <div id="leadDetailsContent" class="p-8">
+                <!-- Content will be dynamically loaded -->
+            </div>
+
+            <div class="flex justify-end space-x-4 px-8 pb-8">
+                <button onclick="closeModal()" class="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Status Update Modal -->
+    <div id="statusModal" class="modal fixed inset-0 bg-black bg-opacity-50 items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-2xl max-w-md w-full">
+            <div class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-6 py-4 rounded-t-2xl">
+                <h2 class="text-xl font-bold">Update Lead Status</h2>
+            </div>
+
+            <div class="p-6">
+                <input type="hidden" id="updateLeadId">
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Select New Status</label>
+                    <select id="newStatus" class="w-full border border-gray-300 rounded-lg px-3 py-2">
+                        <option value="new">New</option>
+                        <option value="contacted">Contacted</option>
+                        <option value="qualified">Qualified</option>
+                        <option value="converted">Converted</option>
+                        <option value="lost">Lost</option>
+                    </select>
+                </div>
+
+                <div class="flex justify-end space-x-4">
+                    <button onclick="closeStatusModal()" class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">
+                        Cancel
+                    </button>
+                    <button onclick="updateLeadStatus()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg">
+                        Update Status
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // =========================
+        // ✅ API CONFIG
+        // =========================
+        const API_URL = 'https://api.umrahflex.com/api';
+
+        async function apiFetch(path, options = {}) {
+            const res = await fetch(`${API_URL}${path}`, {
+                headers: { 'Content-Type': 'application/json', ...(options.headers || {}) },
+                ...options,
+            });
+
+            const text = await res.text();
+            let data;
+            try { data = text ? JSON.parse(text) : null; } catch { data = text; }
+
+            if (!res.ok) throw new Error((data && data.error) ? data.error : (data || `HTTP ${res.status}`));
+            return data;
+        }
+
+        // =========================
+        // ✅ STATE
+        // =========================
+        let allLeads = [];
+        let allOffices = [];
+        let allTeams = [];
+
+        // =========================
+        // ✅ LOAD DATA
+        // =========================
+        async function loadOffices() {
+            try {
+                allOffices = await apiFetch('/offices');
+                const select = document.getElementById('filterOffice');
+                allOffices.forEach(office => {
+                    const option = document.createElement('option');
+                    option.value = office.office_id;
+                    option.textContent = office.office_name;
+                    select.appendChild(option);
+                });
+            } catch (err) {
+                console.error('Failed to load offices:', err);
+            }
+        }
+
+        async function loadTeams() {
+            try {
+                allTeams = await apiFetch('/teams');
+            } catch (err) {
+                console.error('Failed to load teams:', err);
+            }
+        }
+
+        async function loadLeads() {
+            try {
+                const status = document.getElementById('filterStatus').value;
+                const priority = document.getElementById('filterPriority').value;
+                const officeId = document.getElementById('filterOffice').value;
+
+                const qs = new URLSearchParams();
+                if (status) qs.set('status', status);
+                if (priority) qs.set('priority', priority);
+                if (officeId) qs.set('office_id', officeId);
+
+                const data = await apiFetch(`/leads${qs.toString() ? `?${qs}` : ''}`);
+                allLeads = Array.isArray(data) ? data : [];
+                
+                updateStats();
+                applySearchLocal();
+            } catch (err) {
+                console.error('Failed to load leads:', err);
+                alert('❌ Failed to load leads: ' + err.message);
+            }
+        }
+
+        function updateStats() {
+            const total = allLeads.length;
+            const newLeads = allLeads.filter(l => l.status === 'new').length;
+            const contacted = allLeads.filter(l => l.status === 'contacted').length;
+            const qualified = allLeads.filter(l => l.status === 'qualified').length;
+            const converted = allLeads.filter(l => l.status === 'converted').length;
+
+            document.getElementById('statTotal').textContent = total;
+            document.getElementById('statNew').textContent = newLeads;
+            document.getElementById('statContacted').textContent = contacted;
+            document.getElementById('statQualified').textContent = qualified;
+            document.getElementById('statConverted').textContent = converted;
+        }
+
+        function applyFilters() {
+            loadLeads();
+        }
+
+        function applySearchLocal() {
+            const search = (document.getElementById('searchLead').value || '').toLowerCase();
+            const filtered = !search ? allLeads : allLeads.filter(l =>
+                (l.customer_name || '').toLowerCase().includes(search) ||
+                (l.wa_number || '').toLowerCase().includes(search) ||
+                (l.email || '').toLowerCase().includes(search)
+            );
+            renderLeads(filtered);
+        }
+
+        function refreshLeads() {
+            loadLeads();
+        }
+
+        // =========================
+        // ✅ RENDER
+        // =========================
+        function renderLeads(leads) {
+            const tbody = document.getElementById('leadsTableBody');
+
+            if (!leads.length) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="10" class="px-4 py-8 text-center text-sm text-gray-500">
+                            <i class="fas fa-inbox text-4xl text-gray-300 mb-2"></i>
+                            <p>No leads found</p>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            tbody.innerHTML = leads.map(lead => {
+                const statusClass = `badge-${lead.status || 'new'}`;
+                const priorityClass = `badge-${lead.priority || 'low'}`;
+                const createdDate = new Date(lead.created_at).toLocaleDateString();
+                
+                return `
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-4 py-3 text-sm text-gray-900">${lead.lead_id || ''}</td>
+                        <td class="px-4 py-3">
+                            <div class="text-sm font-medium text-gray-900">${lead.customer_name || 'N/A'}</div>
+                            ${lead.source ? `<div class="text-xs text-gray-500">${lead.source}</div>` : ''}
+                        </td>
+                        <td class="px-4 py-3 text-sm text-gray-600">
+                            ${lead.wa_number ? `<div><i class="fab fa-whatsapp text-green-600"></i> ${lead.wa_number}</div>` : ''}
+                            ${lead.email ? `<div><i class="fas fa-envelope text-blue-600"></i> ${lead.email}</div>` : ''}
+                        </td>
+                        <td class="px-4 py-3 text-sm text-gray-600">
+                            ${lead.interested_package || 'Not specified'}
+                        </td>
+                        <td class="px-4 py-3">
+                            <span class="px-2 py-1 rounded-full text-xs font-medium ${priorityClass}">
+                                ${(lead.priority || 'low').toUpperCase()}
+                            </span>
+                        </td>
+                        <td class="px-4 py-3">
+                            <span class="px-2 py-1 rounded-full text-xs font-medium ${statusClass}">
+                                ${(lead.status || 'new').toUpperCase()}
+                            </span>
+                        </td>
+                        <td class="px-4 py-3 text-sm text-gray-600">
+                            ${lead.assigned_to_name || 'Unassigned'}
+                        </td>
+                        <td class="px-4 py-3 text-sm text-gray-600">
+                            ${lead.office_name || 'N/A'}
+                        </td>
+                        <td class="px-4 py-3 text-sm text-gray-600">
+                            ${createdDate}
+                        </td>
+                        <td class="px-4 py-3 text-sm">
+                            <button onclick="viewLead(${lead.lead_id})" 
+                                    class="text-blue-600 hover:text-blue-800 mr-2" 
+                                    title="View Details">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            <button onclick="openStatusModal(${lead.lead_id}, '${lead.status}')" 
+                                    class="text-purple-600 hover:text-purple-800 mr-2"
+                                    title="Update Status">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            ${lead.wa_number ? `
+                                <a href="https://wa.me/${lead.wa_number.replace(/[^0-9]/g, '')}" 
+                                   target="_blank"
+                                   class="text-green-600 hover:text-green-800"
+                                   title="WhatsApp">
+                                    <i class="fab fa-whatsapp"></i>
+                                </a>
+                            ` : ''}
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        // =========================
+        // ✅ MODAL FUNCTIONS
+        // =========================
+        function viewLead(leadId) {
+            const lead = allLeads.find(l => l.lead_id === leadId);
+            if (!lead) return alert('Lead not found');
+
+            const content = document.getElementById('leadDetailsContent');
+            content.innerHTML = `
+                <div class="space-y-6">
+                    <!-- Customer Info -->
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-900 mb-3 flex items-center">
+                            <i class="fas fa-user text-blue-600 mr-2"></i>
+                            Customer Information
+                        </h3>
+                        <div class="grid grid-cols-2 gap-4 bg-gray-50 rounded-lg p-4">
+                            <div>
+                                <p class="text-sm text-gray-500">Name</p>
+                                <p class="font-medium">${lead.customer_name || 'N/A'}</p>
+                            </div>
+                            <div>
+                                <p class="text-sm text-gray-500">WhatsApp</p>
+                                <p class="font-medium">${lead.wa_number || 'N/A'}</p>
+                            </div>
+                            <div>
+                                <p class="text-sm text-gray-500">Email</p>
+                                <p class="font-medium">${lead.email || 'N/A'}</p>
+                            </div>
+                            <div>
+                                <p class="text-sm text-gray-500">City</p>
+                                <p class="font-medium">${lead.city || 'N/A'}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Lead Details -->
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-900 mb-3 flex items-center">
+                            <i class="fas fa-info-circle text-purple-600 mr-2"></i>
+                            Lead Details
+                        </h3>
+                        <div class="grid grid-cols-2 gap-4 bg-gray-50 rounded-lg p-4">
+                            <div>
+                                <p class="text-sm text-gray-500">Status</p>
+                                <p class="font-medium">
+                                    <span class="px-2 py-1 rounded-full text-xs badge-${lead.status}">
+                                        ${(lead.status || 'new').toUpperCase()}
+                                    </span>
+                                </p>
+                            </div>
+                            <div>
+                                <p class="text-sm text-gray-500">Priority</p>
+                                <p class="font-medium">
+                                    <span class="px-2 py-1 rounded-full text-xs badge-${lead.priority}">
+                                        ${(lead.priority || 'low').toUpperCase()}
+                                    </span>
+                                </p>
+                            </div>
+                            <div>
+                                <p class="text-sm text-gray-500">Source</p>
+                                <p class="font-medium">${lead.source || 'N/A'}</p>
+                            </div>
+                            <div>
+                                <p class="text-sm text-gray-500">Interested Package</p>
+                                <p class="font-medium">${lead.interested_package || 'Not specified'}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Assignment -->
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-900 mb-3 flex items-center">
+                            <i class="fas fa-users text-green-600 mr-2"></i>
+                            Assignment
+                        </h3>
+                        <div class="grid grid-cols-2 gap-4 bg-gray-50 rounded-lg p-4">
+                            <div>
+                                <p class="text-sm text-gray-500">Assigned To</p>
+                                <p class="font-medium">${lead.assigned_to_name || 'Unassigned'}</p>
+                            </div>
+                            <div>
+                                <p class="text-sm text-gray-500">Office</p>
+                                <p class="font-medium">${lead.office_name || 'N/A'}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Notes -->
+                    ${lead.notes ? `
+                        <div>
+                            <h3 class="text-lg font-semibold text-gray-900 mb-3 flex items-center">
+                                <i class="fas fa-sticky-note text-yellow-600 mr-2"></i>
+                                Notes
+                            </h3>
+                            <div class="bg-yellow-50 rounded-lg p-4">
+                                <p class="text-sm text-gray-700">${lead.notes}</p>
+                            </div>
+                        </div>
+                    ` : ''}
+
+                    <!-- Timestamps -->
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-900 mb-3 flex items-center">
+                            <i class="fas fa-clock text-gray-600 mr-2"></i>
+                            Timeline
+                        </h3>
+                        <div class="grid grid-cols-2 gap-4 bg-gray-50 rounded-lg p-4">
+                            <div>
+                                <p class="text-sm text-gray-500">Created</p>
+                                <p class="font-medium">${new Date(lead.created_at).toLocaleString()}</p>
+                            </div>
+                            ${lead.last_contact_date ? `
+                                <div>
+                                    <p class="text-sm text-gray-500">Last Contact</p>
+                                    <p class="font-medium">${new Date(lead.last_contact_date).toLocaleString()}</p>
+                                </div>
+                            ` : ''}
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('leadModal').classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('leadModal').classList.remove('active');
+        }
+
+        function openStatusModal(leadId, currentStatus) {
+            document.getElementById('updateLeadId').value = leadId;
+            document.getElementById('newStatus').value = currentStatus || 'new';
+            document.getElementById('statusModal').classList.add('active');
+        }
+
+        function closeStatusModal() {
+            document.getElementById('statusModal').classList.remove('active');
+        }
+
+        async function updateLeadStatus() {
+            const leadId = document.getElementById('updateLeadId').value;
+            const newStatus = document.getElementById('newStatus').value;
+
+            if (!leadId || !newStatus) return;
+
+            try {
+                await apiFetch(`/leads/${leadId}/status`, {
+                    method: 'PATCH',
+                    body: JSON.stringify({ status: newStatus })
+                });
+
+                alert('✅ Lead status updated successfully!');
+                closeStatusModal();
+                await loadLeads();
+            } catch (err) {
+                alert('❌ Failed to update status: ' + err.message);
+            }
+        }
+
+        // Close modals on outside click
+        document.getElementById('leadModal').addEventListener('click', function(e) {
+            if (e.target === this) closeModal();
+        });
+
+        document.getElementById('statusModal').addEventListener('click', function(e) {
+            if (e.target === this) closeStatusModal();
+        });
+
+        // =========================
+        // ✅ INITIALIZE
+        // =========================
+        async function init() {
+            try {
+                await Promise.all([
+                    loadOffices(),
+                    loadTeams(),
+                    loadLeads()
+                ]);
+                console.log('✅ Inbox loaded successfully');
+            } catch (err) {
+                console.error('❌ Initialization error:', err);
+                alert('Failed to initialize inbox. Please check your connection.');
+            }
+        }
+
+        // Start
+        init();
+    </script>
+</body>
+</html>
